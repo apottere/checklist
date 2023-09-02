@@ -1,0 +1,6 @@
+{
+    "!*.{js,jsx,ts,tsx,tf}": ["prettier --ignore-unknown --write"],
+    "*.{js,jsx,ts,tsx}": ["prettier --write", "eslint"],
+    "*.{ts,tsx}": ["/bin/sh -c 'tsc --noEmit'"],
+    "*.tf": ["/usr/bin/env bash -c 'set -euo pipefail; for file in \"$@\"; do terraform fmt \"$file\"; done' --"]
+}

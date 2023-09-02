@@ -1,0 +1,15 @@
+# Ignore directories
+node_modules/
+.husky/
+/build/
+/dist/
+/coverage/
+
+# Ignore known files
+pnpm-lock.yaml
+package-lock.json
+*.sh
+*.tfstate
+*.lock.hcl
+*.tf
+*.md
