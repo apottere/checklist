@@ -6,11 +6,14 @@
   "scripts": {
     "postinstall": "husky install",
     "start": "vite",
+    "add-user": "./add-user.sh",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "eslint-plugin-solid": "^0.13.0",
+    "firebase": "^10.3.1",
+    "solid-firebase": "^0.3.0",
     "solid-js": "^1.7.8"
   },
   "devDependencies": {
@@ -27,7 +30,7 @@
     "prettier": "^3.0.3",
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
-    "vite-plugin-eslint": "^1.8.1",
-    "vite-plugin-solid": "^2.7.0"
+    "vite-plugin-solid": "^2.7.0",
+    "vite-tsconfig-paths": "^4.2.0"
   }
 }

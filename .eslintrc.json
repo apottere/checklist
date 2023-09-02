@@ -37,7 +37,7 @@
                         "patterns": [
                             {
                                 "group": [".*"],
-                                "message": "Use aliased absolute imports (@/...) instead of relative"
+                                "message": "Use aliased absolute imports (@/...) instead of relative "
                             },
                             {
                                 "group": ["\\/*"],

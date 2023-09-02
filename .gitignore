@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 
 .firebaserc
+/src/firebase-sdk-config.json

@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite';
 import solid from 'vite-plugin-solid';
-import eslint from 'vite-plugin-eslint';
+import paths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-    plugins: [solid(), eslint()],
+    plugins: [solid(), paths()],
+    server: {
+        port: 3000,
+    },
 });

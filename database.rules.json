@@ -7,8 +7,8 @@
             ".write": false
         },
         "app": {
-            ".read": "auth.token.email_verified === true && root.child('meta').child('emails').val().contains(auth.token.email)",
-            ".write": "auth.token.email_verified === true && root.child('meta').child('emails').val().contains(auth.token.email)"
+            ".read": "auth !== null && auth.token.email_verified === true && root.child('meta').child('allowlist').child(auth.token.email.replace('.', '&')).val() === auth.token.email",
+            ".write": "auth !== null && auth.token.email_verified === true && root.child('meta').child('allowlist').child(auth.token.email.replace('.', '&')).val() === auth.token.email"
         }
     }
 }
