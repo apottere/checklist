@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "postinstall": "husky install",
-    "login": "firebase login",
     "start": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"

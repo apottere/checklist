@@ -1,6 +1,14 @@
 {
     "rules": {
         ".read": false,
-        ".write": false
+        ".write": false,
+        "meta": {
+            ".read": false,
+            ".write": false
+        },
+        "app": {
+            ".read": "auth.token.email_verified === true && root.child('meta').child('emails').val().contains(auth.token.email)",
+            ".write": "auth.token.email_verified === true && root.child('meta').child('emails').val().contains(auth.token.email)"
+        }
     }
 }
