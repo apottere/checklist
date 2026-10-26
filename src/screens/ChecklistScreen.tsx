@@ -1,6 +1,7 @@
 import { Component, createEffect, createMemo, createSignal, For, JSX, on, onCleanup, Show, untrack } from 'solid-js';
 import { ConfirmDialog, Dialog, TextDialog } from '@/components/Dialog.tsx';
 import { Fab } from '@/components/Fab.tsx';
+import { Reflow } from '@/components/Reflow.tsx';
 import { EmptyState, ProgressRing } from '@/components/Visuals.tsx';
 import { TemplatePicker } from '@/components/TemplatePicker.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
@@ -28,8 +29,6 @@ import { loadSetting, saveSetting } from '@/lib/settings.ts';
 import { showSnackbar } from '@/lib/snackbar.ts';
 import { NotFound } from '@/screens/common.tsx';
 
-/** Matches the `leaving` collapse animation in index.css. */
-const LEAVE_MS = 240;
 /** Long enough for the Undo snackbar of the last check to be used first. */
 const ALL_DONE_DELAY_MS = 5000;
 
@@ -54,27 +53,15 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     const { data } = useStore();
     const id = (): string => props.checklist.id;
     const view = createMemo(() => checklistView(data(), id()));
-    // Resolved rows stay in the open list just long enough to play their collapse animation.
-    const [leaving, setLeaving] = createSignal(new Set<string>());
     const [dialog, setDialog] = createSignal<'rename' | 'uncheck' | 'unskip' | 'add'>();
 
-    const leave = (itemId: string): void => {
-        setLeaving(new Set([...leaving(), itemId]));
-        setTimeout(() => {
-            const next = new Set(leaving());
-            next.delete(itemId);
-            setLeaving(next);
-        }, LEAVE_MS);
-    };
-
-    const openView = createMemo(() => filterView(view(), (i) => i.state === 'open' || leaving().has(i.id)));
-    const doneView = createMemo(() => filterView(view(), (i) => i.state === 'done' && !leaving().has(i.id)));
-    const skippedView = createMemo(() => filterView(view(), (i) => i.state === 'skipped' && !leaving().has(i.id)));
+    const openView = createMemo(() => filterView(view(), (i) => i.state === 'open'));
+    const doneView = createMemo(() => filterView(view(), (i) => i.state === 'done'));
+    const skippedView = createMemo(() => filterView(view(), (i) => i.state === 'skipped'));
     const total = (): number => count(view());
     const summary = (): Progress => progress(data(), id());
 
     const changeState = (item: WithId<ChecklistItem>, state: ItemState): void => {
-        if (item.state === 'open') leave(item.id);
         const verb = { open: 'Reopened', done: 'Checked', skipped: 'Skipped' }[state];
         commitWithUndo(setItemState(data(), item.id, state), `${verb} "${item.text}"`);
     };
@@ -103,29 +90,22 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     );
     onCleanup(() => clearTimeout(allDoneTimer));
 
-    // The collapse animates from each row's measured height. Kept by ID because the state change re-creates the row.
-    const rowHeights = new Map<string, number>();
-
     const OpenRow: Component<{ item: WithId<ChecklistItem> }> = (p) => {
-        let row!: HTMLLIElement;
-        const resolve = (state: ItemState): void => {
-            rowHeights.set(p.item.id, row.offsetHeight);
-            changeState(p.item, state);
-        };
+        let content!: HTMLLabelElement;
         return (
             <li
-                classList={{ leaving: leaving().has(p.item.id) }}
-                style={{ '--row-height': `${rowHeights.get(p.item.id) ?? 0}px` }}
-                ref={(el) => {
-                    row = el;
-                    swipe(el, () => resolve('skipped'));
-                }}
+                class="swipe-row"
+                ref={(el) => queueMicrotask(() => swipe(el, content, () => changeState(p.item, 'skipped')))}
             >
-                <label class="checkbox item max">
+                <div class="swipe-behind" aria-hidden="true">
+                    <i>block</i>
+                    <span>Skip</span>
+                </div>
+                <label ref={content} class="checkbox item swipe-content">
                     <input
                         type="checkbox"
                         checked={p.item.state === 'done'}
-                        onChange={(e) => resolve(e.currentTarget.checked ? 'done' : 'open')}
+                        onChange={(e) => changeState(p.item, e.currentTarget.checked ? 'done' : 'open')}
                     />
                     <span>{p.item.text}</span>
                 </label>
@@ -271,49 +251,60 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     );
 };
 
-/** Groups and sections, keyed by ID so rows survive re-renders. `flat` drops the section cards, for use inside a fold. */
+/**
+ * Groups and sections, keyed by ID so rows survive re-renders. Rows and sections that leave fade out while the rest
+ * slide into place. `flat` drops the section cards, for use inside a fold.
+ */
 const Grouped: Component<{
     view: GroupView[];
     row: (item: WithId<ChecklistItem>) => JSX.Element;
     flat?: boolean;
 }> = (props) => (
-    <For each={props.view.map((g) => g.group.id)}>
-        {(groupId) => {
-            const group = (): GroupView | undefined => props.view.find((g) => g.group.id === groupId);
-            return (
-                <Show when={group()}>
-                    {(g) => (
-                        <section class="group">
-                            <Show when={g().group.name}>
-                                <h5 class="group-title">{g().group.name}</h5>
-                            </Show>
-                            <For each={g().sections.map((s) => s.section.id)}>
-                                {(sectionId) => {
-                                    const section = (): SectionView | undefined =>
-                                        g().sections.find((s) => s.section.id === sectionId);
-                                    return (
-                                        <Show when={section()}>
-                                            {(s) => (
-                                                <div classList={{ tonal: !props.flat }}>
-                                                    <div class="section-title">
-                                                        <span>{s().name}</span>
-                                                        <span class="muted">{s().items.length}</span>
-                                                    </div>
-                                                    <ul class="list">
-                                                        <For each={s().items}>{(item) => props.row(item)}</For>
-                                                    </ul>
-                                                </div>
-                                            )}
-                                        </Show>
-                                    );
-                                }}
-                            </For>
-                        </section>
-                    )}
-                </Show>
-            );
-        }}
-    </For>
+    <Reflow>
+        <For each={props.view.map((g) => g.group.id)}>
+            {(groupId) => {
+                const group = (): GroupView | undefined => props.view.find((g) => g.group.id === groupId);
+                return (
+                    <Show when={group()}>
+                        {(g) => (
+                            <section class="group">
+                                <Show when={g().group.name}>
+                                    <h5 class="group-title">{g().group.name}</h5>
+                                </Show>
+                                <Reflow>
+                                    <For each={g().sections.map((s) => s.section.id)}>
+                                        {(sectionId) => {
+                                            const section = (): SectionView | undefined =>
+                                                g().sections.find((s) => s.section.id === sectionId);
+                                            return (
+                                                <Show when={section()}>
+                                                    {(s) => (
+                                                        <div classList={{ tonal: !props.flat }}>
+                                                            <div class="section-title">
+                                                                <span>{s().name}</span>
+                                                                <span class="muted">{s().items.length}</span>
+                                                            </div>
+                                                            <ul class="list">
+                                                                <Reflow>
+                                                                    <For each={s().items}>
+                                                                        {(item) => props.row(item)}
+                                                                    </For>
+                                                                </Reflow>
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </Show>
+                                            );
+                                        }}
+                                    </For>
+                                </Reflow>
+                            </section>
+                        )}
+                    </Show>
+                );
+            }}
+        </For>
+    </Reflow>
 );
 
 // Stays open after each add for quick entry.

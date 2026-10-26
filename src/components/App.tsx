@@ -1,5 +1,5 @@
 import { Component, createSignal, Match, Show, Switch } from 'solid-js';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAdditionalUserInfo, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
 import { Shell } from '@/components/Shell.tsx';
 import { auth } from '@/lib/firebase.ts';
 import { createAuthUser } from '@/lib/primitives.ts';
@@ -8,7 +8,15 @@ const Login: Component = () => {
     const [error, setError] = createSignal<string>();
     const signIn = (): void => {
         setError(undefined);
-        signInWithPopup(auth, new GoogleAuthProvider()).catch((e: Error) => setError(e.message));
+        signInWithPopup(auth, new GoogleAuthProvider())
+            .then((result) => {
+                // Firebase copies the Google name only when the account is first created, so it goes stale.
+                const name = getAdditionalUserInfo(result)?.profile?.name;
+                if (typeof name === 'string' && name !== result.user.displayName) {
+                    return updateProfile(result.user, { displayName: name });
+                }
+            })
+            .catch((e: Error) => setError(e.message));
     };
 
     return (

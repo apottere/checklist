@@ -538,25 +538,66 @@ ul.tonal {
     text-decoration: line-through;
 }
 
-/* Checked or skipped rows collapse upward instead of shifting the list once they're gone. */
-.list > li.leaving {
-    overflow: hidden;
-    min-block-size: 0;
-    pointer-events: none;
-    animation: row-leave 240ms var(--ease-emphasized) forwards;
+/* See Reflow.tsx. Exiting elements leave the layout so their siblings can move up; the selector beats Beer's `.list > li`. */
+.reflow-move {
+    transition: transform 300ms var(--ease-emphasized);
 }
 
-@keyframes row-leave {
-    from {
-        block-size: var(--row-height);
-        opacity: 1;
-    }
-    to {
-        block-size: 0;
-        padding-block: 0;
-        opacity: 0;
-        border-color: transparent;
-    }
+:is(.list > li, div, section).reflow-exiting {
+    position: absolute;
+    inset-inline: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Swipe to skip: the row slides over a leave-behind, which brightens once a release would skip. */
+.tonal .list > li.swipe-row {
+    padding: 0;
+    overflow: hidden;
+}
+
+.swipe-content {
+    flex: 1;
+    min-block-size: 3.25rem;
+    padding: 0.25rem 1rem;
+    background-color: var(--surface-container-low);
+}
+
+.swipe-behind {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline: 1.5rem;
+    background-color: var(--tertiary-container);
+    color: var(--on-tertiary-container);
+    font-weight: 500;
+    opacity: 0;
+    transition:
+        background-color 150ms ease,
+        color 150ms ease;
+}
+
+.swipe-row.swiping > .swipe-behind {
+    opacity: 1;
+}
+
+.swipe-row[data-direction="end"] > .swipe-behind {
+    justify-content: flex-end;
+}
+
+.swipe-behind > i {
+    transition: transform 150ms var(--ease-emphasized);
+}
+
+.swipe-row.armed > .swipe-behind {
+    background-color: var(--tertiary);
+    color: var(--on-tertiary);
+}
+
+.swipe-row.armed > .swipe-behind > i {
+    transform: scale(1.25);
 }
 
 .list > li.resolved {

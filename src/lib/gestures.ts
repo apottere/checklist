@@ -1,29 +1,49 @@
 const START_THRESHOLD = 10;
+/** Fraction of the row's width past which a release triggers. */
+const ARM_FRACTION = 0.3;
+/** A quick flick triggers even short of the threshold (px/ms). */
+const FLING_VELOCITY = 0.6;
+const FLING_MIN_DISTANCE = 48;
+const SETTLE_MS = 200;
 
 /**
- * Horizontal swipe on `el`. Vertical movement is left to the browser for scrolling (`touch-action: pan-y`).
- * Triggers when swiped past a third of the element's width.
+ * Swipe-to-dismiss with a leave-behind, like Gmail: `content` follows the finger over a background in `row`. Past the
+ * threshold the row is "armed" (class `armed`, a short vibration); releasing then slides the content off and calls
+ * `onSwipe`, otherwise it springs back. While dragging, `row` has class `swiping` and `data-direction` of `start` or
+ * `end` for the side being revealed. Vertical movement is left to the browser for scrolling.
  */
-export function swipe(el: HTMLElement, onSwipe: () => void): void {
+export function swipe(row: HTMLElement, content: HTMLElement, onSwipe: () => void): void {
     let startX = 0;
     let startY = 0;
     let dx = 0;
+    let lastX = 0;
+    let lastTime = 0;
+    let velocity = 0;
     let tracking = false;
     let dragging = false;
+    let armed = false;
     let suppressClick = false;
 
-    el.style.touchAction = 'pan-y';
+    row.style.touchAction = 'pan-y';
 
-    el.addEventListener('pointerdown', (e) => {
+    const setArmed = (next: boolean): void => {
+        if (next === armed) return;
+        armed = next;
+        row.classList.toggle('armed', armed);
+        if (armed) navigator.vibrate?.(10);
+    };
+
+    row.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
-        startX = e.clientX;
+        startX = lastX = e.clientX;
         startY = e.clientY;
-        dx = 0;
+        lastTime = e.timeStamp;
+        dx = velocity = 0;
         tracking = true;
         dragging = false;
     });
 
-    el.addEventListener('pointermove', (e) => {
+    row.addEventListener('pointermove', (e) => {
         if (!tracking) return;
         const mx = e.clientX - startX;
         const my = e.clientY - startY;
@@ -31,37 +51,50 @@ export function swipe(el: HTMLElement, onSwipe: () => void): void {
             if (Math.abs(my) > START_THRESHOLD) tracking = false;
             if (Math.abs(mx) <= START_THRESHOLD || !tracking) return;
             dragging = true;
-            el.setPointerCapture(e.pointerId);
-            el.style.transition = 'none';
+            try {
+                row.setPointerCapture(e.pointerId);
+            } catch {
+                // Throws if the pointer is already gone; the swipe still works without capture.
+            }
+            row.classList.add('swiping');
+            content.style.transition = 'none';
         }
+        const elapsed = e.timeStamp - lastTime;
+        if (elapsed > 0) velocity = (e.clientX - lastX) / elapsed;
+        lastX = e.clientX;
+        lastTime = e.timeStamp;
         dx = mx;
-        el.style.transform = `translateX(${dx}px)`;
-        el.style.opacity = String(1 - Math.min(Math.abs(dx) / el.offsetWidth, 0.7));
+        row.dataset.direction = dx > 0 ? 'start' : 'end';
+        content.style.transform = `translateX(${dx}px)`;
+        setArmed(Math.abs(dx) > row.offsetWidth * ARM_FRACTION);
     });
 
-    const end = (): void => {
-        if (dragging) {
-            // The click that follows pointerup would otherwise toggle whatever is under the finger.
-            suppressClick = true;
-            const triggered = Math.abs(dx) > el.offsetWidth / 3;
-            el.style.transition = '';
-            el.style.transform = triggered ? `translateX(${Math.sign(dx) * 100}%)` : '';
-            el.style.opacity = triggered ? '0' : '';
-            if (triggered) {
-                onSwipe();
-                setTimeout(() => {
-                    el.style.transform = '';
-                    el.style.opacity = '';
-                }, 300);
-            }
-        }
+    // A cancel (e.g. the browser taking over to scroll) always springs back.
+    const end = (release: boolean): void => {
         tracking = false;
+        if (!dragging) return;
         dragging = false;
+        // The click that follows pointerup would otherwise toggle the checkbox.
+        suppressClick = release;
+        const flung =
+            Math.abs(velocity) > FLING_VELOCITY &&
+            Math.abs(dx) > FLING_MIN_DISTANCE &&
+            Math.sign(velocity) === Math.sign(dx);
+        content.style.transition = `transform ${SETTLE_MS}ms cubic-bezier(0.2, 0, 0, 1)`;
+        if (release && (armed || flung)) {
+            setArmed(true);
+            content.style.transform = `translateX(${Math.sign(dx) * 100}%)`;
+            setTimeout(onSwipe, SETTLE_MS);
+        } else {
+            content.style.transform = '';
+            setArmed(false);
+            setTimeout(() => row.classList.remove('swiping'), SETTLE_MS);
+        }
     };
-    el.addEventListener('pointerup', end);
-    el.addEventListener('pointercancel', end);
+    row.addEventListener('pointerup', () => end(true));
+    row.addEventListener('pointercancel', () => end(false));
 
-    el.addEventListener(
+    row.addEventListener(
         'click',
         (e) => {
             if (!suppressClick) return;

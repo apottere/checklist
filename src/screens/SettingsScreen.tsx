@@ -4,7 +4,12 @@ import { TopBar } from '@/components/TopBar.tsx';
 import { auth } from '@/lib/firebase.ts';
 
 export const SettingsScreen: Component<{ user: User }> = (props) => {
-    const name = (): string => props.user.displayName ?? props.user.email ?? 'Signed in';
+    // The Google profile is refreshed on sign-in; the account's own display name may predate a rename.
+    const name = (): string =>
+        props.user.providerData.find((p) => p.providerId === 'google.com')?.displayName ??
+        props.user.displayName ??
+        props.user.email ??
+        'Signed in';
 
     return (
         <>

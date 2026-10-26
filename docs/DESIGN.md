@@ -115,8 +115,8 @@ Deleting is limited to library editing: template items, folders, and archived te
 
 ## Interaction details
 
-- **Undo**: checking, skipping, reopening, and archiving show a snackbar with Undo. Checked and skipped rows collapse out of the list immediately; Undo covers mis-taps.
-- **Swipe to skip** on open items. To revisit if it interferes with scrolling.
+- **Undo**: checking, skipping, reopening, and archiving show a snackbar with Undo. Checked and skipped rows leave the list immediately, fading while the rows below slide up; Undo covers mis-taps.
+- **Swipe to skip** on open items, either direction, with a Gmail-style leave-behind: a Skip background is revealed under the row and turns solid (with a short vibration) once releasing would skip. A quick flick also skips; anything less springs back. To revisit if it interferes with scrolling.
 - **Drag and drop**: uses a drag handle, not long-press on the whole row, so it doesn't fight scrolling. Must work with touch. Reordering also has a menu fallback (Move up / Move down) for accessibility.
 - **Theme**: Material 3 via Beer CSS. Follows the system light/dark setting and switches live.
 - **Offline**: everything works offline; see `src/lib/firebase.ts`. All data is loaded up front so it's available offline without being opened first.
