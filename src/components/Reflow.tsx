@@ -7,7 +7,7 @@ const EXIT_DELAY = 60;
 /** The fade finishes this far into the collapse, so the space closes on an empty row rather than squashing its text. */
 const FADE_END = 0.4;
 
-/** The element's full box, so collapsing it also closes its padding, margin and divider. */
+/** The element's full box, so collapsing it also closes its padding and margin. */
 function openBox(el: HTMLElement): Keyframe {
     const s = getComputedStyle(el);
     return {
@@ -16,7 +16,6 @@ function openBox(el: HTMLElement): Keyframe {
         paddingBottom: s.paddingBottom,
         marginTop: s.marginTop,
         marginBottom: s.marginBottom,
-        borderTopWidth: s.borderTopWidth,
     };
 }
 
@@ -26,7 +25,6 @@ const CLOSED: Keyframe = {
     paddingBottom: '0px',
     marginTop: '0px',
     marginBottom: '0px',
-    borderTopWidth: '0px',
 };
 
 /** Calls `done` when the animation ends, or on schedule if frames are throttled (e.g. a background tab). */
@@ -53,7 +51,7 @@ export const Reflow: FlowComponent = (props) => (
         onExit={(el, done) => {
             if (!(el instanceof HTMLElement)) return done();
             const open = openBox(el);
-            el.classList.add('reflow-animating');
+            el.classList.add('reflow-animating', 'reflow-exiting');
             animate(
                 el,
                 [

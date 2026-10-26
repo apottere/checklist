@@ -192,15 +192,25 @@ ul.tonal {
 .tonal.list > li,
 .tonal .list > li,
 .group-card .list > li {
+    position: relative;
     padding: 0.25rem 1rem;
     min-block-size: 3.25rem;
     font-size: 1rem;
 }
 
-.tonal.list > li + li,
-.tonal .list > li + li,
-.group-card .list > li + li {
+/* An overlay rather than a border, so a divider coming or going doesn't shift the rows. */
+:is(.tonal.list, .tonal .list, .group-card .list) > li + li::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
     border-block-start: 1px solid var(--surface-container-highest);
+    transition: opacity 150ms;
+}
+
+/* The row after a leaving first row is about to become first. */
+.list > li.reflow-exiting:first-child + li::before {
+    opacity: 0;
 }
 
 .list > li > button.transparent > i {
@@ -301,12 +311,41 @@ ul.tonal {
     inset-block-end: calc(5rem + env(safe-area-inset-bottom));
 }
 
+/* Compact, and hugging the FAB's side: beside it without the nav bar, stacked above it with one. */
+.snackbar {
+    inset: auto 1rem max(1rem, env(safe-area-inset-bottom)) auto;
+    max-inline-size: calc(100% - 2rem);
+    inline-size: 30rem;
+    min-block-size: 3rem;
+    padding: 0.25rem 0.5rem 0.25rem 1rem;
+    font-size: 0.875rem;
+    transform: translateY(0.5rem);
+}
+
+.snackbar:is(.active) {
+    transform: none;
+}
+
+.snackbar > .inverse-link {
+    padding: 0.5rem;
+    font-weight: 500;
+}
+
+/* Centered on the FAB (3.5rem tall), leaving a gap beside it. */
+.snackbar.above-fab {
+    inset-block-end: calc(max(1rem, env(safe-area-inset-bottom)) + 0.25rem);
+    inset-inline-end: 5.25rem;
+    max-inline-size: calc(100% - 6.25rem);
+}
+
 .snackbar.above-nav {
+    inset-inline-end: 1rem;
+    max-inline-size: calc(100% - 2rem);
     inset-block-end: calc(5.5rem + env(safe-area-inset-bottom));
 }
 
 .snackbar.above-nav.above-fab {
-    inset-block-end: calc(10rem + env(safe-area-inset-bottom));
+    inset-block-end: calc(9.5rem + env(safe-area-inset-bottom));
 }
 
 .fab-menu {
