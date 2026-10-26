@@ -14,7 +14,8 @@ const Login: Component = () => {
     return (
         <main class="responsive middle-align center-align">
             <div class="hero">
-                <div class="shape very-sunny slow-rotate">
+                <div class="hero-art">
+                    <div class="shape very-sunny slow-rotate" />
                     <i>checklist</i>
                 </div>
                 <h3>Checklist</h3>

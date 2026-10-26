@@ -176,12 +176,17 @@ ul.tonal {
 .group-card .list > li {
     padding: 0.25rem 1rem;
     min-block-size: 3.25rem;
+    font-size: 1rem;
 }
 
 .tonal.list > li + li,
 .tonal .list > li + li,
 .group-card .list > li + li {
     border-block-start: 1px solid var(--surface-container-highest);
+}
+
+.list > li > button.transparent > i {
+    color: var(--on-surface-variant);
 }
 
 .tile {
@@ -570,12 +575,25 @@ ul.tonal {
 
 /* Templates and structure */
 
-.list > li.folder {
+/* Beer zeroes padding on list items that contain a list. */
+.tonal.list > li.folder {
     flex-wrap: wrap;
+    padding: 0.25rem 1rem;
 }
 
-.folder > .nested {
-    flex-basis: 100%;
+/* Full-width rows inside the folder, indented one step. Specific enough to beat Beer's nested list rule. */
+.tonal.list > li.folder > ul.nested {
+    flex-basis: calc(100% + 2rem);
+    margin: 0 -1rem -0.25rem;
+    padding: 0;
+}
+
+.tonal .folder > .nested > li {
+    padding-inline-start: 2.5rem;
+}
+
+.folder > p.nested {
+    margin: 0 0 0.5rem 3.5rem;
 }
 
 .group-card {
@@ -633,18 +651,30 @@ ul.tonal {
     gap: 0.75rem;
 }
 
-.hero > .shape {
+/* The icon sits over the shape so only the shape rotates. */
+.hero-art {
+    position: relative;
+    display: grid;
+    place-items: center;
     inline-size: 9rem;
     block-size: 9rem;
-    margin-block-end: 1rem !important;
-    background-color: var(--primary);
-    color: var(--on-primary);
+    margin-block-end: 1rem;
 }
 
-.hero > .shape > i {
+.hero-art > .shape {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    background-color: var(--primary);
+}
+
+.hero-art > i {
+    position: relative;
     font-size: 4rem;
     inline-size: 4rem;
     block-size: 4rem;
+    color: var(--on-primary);
 }
 
 .hero > p {
@@ -671,6 +701,10 @@ ul.tonal {
 
 .archive-tabs {
     margin-block-end: 1rem;
+}
+
+.profile + .list {
+    border-block-start: 1px solid var(--surface-container-highest);
 }
 
 .profile {
