@@ -71,11 +71,11 @@ const ArchivedChecklists: Component = () => {
                                     <span class="muted">Started {new Date(c.createdAt).toLocaleDateString()}</span>
                                 </a>
                                 <button
-                                    class="transparent"
+                                    class="circle transparent"
+                                    aria-label="Restore"
                                     onClick={() => commit(setChecklistArchived(data(), c.id, false))}
                                 >
                                     <i>unarchive</i>
-                                    <span>Restore</span>
                                 </button>
                                 <button
                                     class="circle transparent"
@@ -147,11 +147,11 @@ const ArchivedTemplates: Component = () => {
                                 </span>
                                 <span class="max">{t.name}</span>
                                 <button
-                                    class="transparent"
+                                    class="circle transparent"
+                                    aria-label="Restore"
                                     onClick={() => commit(setTemplateArchived(data(), t.id, false))}
                                 >
                                     <i>unarchive</i>
-                                    <span>Restore</span>
                                 </button>
                                 <button
                                     class="circle transparent"
