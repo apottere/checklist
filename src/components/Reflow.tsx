@@ -1,38 +1,88 @@
 import { FlowComponent } from 'solid-js';
 import { TransitionGroup } from 'solid-transition-group';
 
-const EXIT = { delay: 60, duration: 180 };
-const ENTER = { duration: 200 };
+const DURATION = 280;
+/** Lets a check mark register before the row starts to go. */
+const EXIT_DELAY = 60;
+/** The fade finishes this far into the collapse, so the space closes on an empty row rather than squashing its text. */
+const FADE_END = 0.4;
 
-/** Calls `done` when the animation ends, or after its duration if frames are throttled (e.g. a background tab). */
-function animate(
-    el: Element,
-    keyframes: Keyframe[],
-    timing: { delay?: number; duration: number },
-    done: () => void
-): void {
+/** The element's full box, so collapsing it also closes its padding, margin and divider. */
+function openBox(el: HTMLElement): Keyframe {
+    const s = getComputedStyle(el);
+    return {
+        height: `${el.offsetHeight}px`,
+        paddingTop: s.paddingTop,
+        paddingBottom: s.paddingBottom,
+        marginTop: s.marginTop,
+        marginBottom: s.marginBottom,
+        borderTopWidth: s.borderTopWidth,
+    };
+}
+
+const CLOSED: Keyframe = {
+    height: '0px',
+    paddingTop: '0px',
+    paddingBottom: '0px',
+    marginTop: '0px',
+    marginBottom: '0px',
+    borderTopWidth: '0px',
+};
+
+/** Calls `done` when the animation ends, or on schedule if frames are throttled (e.g. a background tab). */
+function animate(el: HTMLElement, keyframes: Keyframe[], options: KeyframeAnimationOptions, done: () => void): void {
     let finished = false;
     const finish = (): void => {
         if (finished) return;
         finished = true;
         done();
     };
-    el.animate(keyframes, { ...timing, easing: 'ease', fill: 'forwards' }).finished.then(finish, finish);
-    setTimeout(finish, (timing.delay ?? 0) + timing.duration + 50);
+    el.animate(keyframes, { duration: DURATION, easing: 'cubic-bezier(0.2, 0, 0, 1)', ...options }).finished.then(
+        finish,
+        finish
+    );
+    setTimeout(finish, (Number(options.delay) || 0) + DURATION + 50);
 }
 
 /**
- * Children that leave fade out while taken out of the layout, so their siblings slide into place (FLIP, via
- * `reflow-move`) instead of jumping. The exit delay lets a check mark register before the row goes.
+ * Children that leave fade, then collapse, so everything below slides up instead of jumping. Children that arrive
+ * (e.g. on Undo) do the reverse.
  */
 export const Reflow: FlowComponent = (props) => (
     <TransitionGroup
-        moveClass="reflow-move"
         onExit={(el, done) => {
-            el.classList.add('reflow-exiting');
-            animate(el, [{ opacity: 1 }, { opacity: 0 }], EXIT, done);
+            if (!(el instanceof HTMLElement)) return done();
+            const open = openBox(el);
+            el.classList.add('reflow-animating');
+            animate(
+                el,
+                [
+                    { ...open, opacity: 1 },
+                    { opacity: 0, offset: FADE_END },
+                    { ...CLOSED, opacity: 0 },
+                ],
+                { delay: EXIT_DELAY, fill: 'forwards' },
+                done
+            );
         }}
-        onEnter={(el, done) => animate(el, [{ opacity: 0 }, { opacity: 1 }], ENTER, done)}
+        onEnter={(el, done) => {
+            if (!(el instanceof HTMLElement)) return done();
+            const open = openBox(el);
+            el.classList.add('reflow-animating');
+            animate(
+                el,
+                [
+                    { ...CLOSED, opacity: 0 },
+                    { opacity: 0, offset: 1 - FADE_END },
+                    { ...open, opacity: 1 },
+                ],
+                {},
+                () => {
+                    el.classList.remove('reflow-animating');
+                    done();
+                }
+            );
+        }}
     >
         {props.children}
     </TransitionGroup>

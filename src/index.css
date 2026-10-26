@@ -538,15 +538,15 @@ ul.tonal {
     text-decoration: line-through;
 }
 
-/* See Reflow.tsx. Exiting elements leave the layout so their siblings can move up; the selector beats Beer's `.list > li`. */
-.reflow-move {
-    transition: transform 300ms var(--ease-emphasized);
-}
-
-:is(.list > li, div, section).reflow-exiting {
-    position: absolute;
-    inset-inline: 0;
-    z-index: 1;
+/*
+ * See Reflow.tsx. Contents are clipped and pinned to the top while the height animates; otherwise list rows' flex
+ * sizing, centering and minimum height would ignore the height or shift the text. The selector beats Beer's `.list > li`.
+ */
+:is(.list > li, div, section).reflow-animating {
+    flex: none;
+    overflow: hidden;
+    align-items: flex-start;
+    min-block-size: 0;
     pointer-events: none;
 }
 
