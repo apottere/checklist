@@ -415,11 +415,30 @@ ul.tonal {
     user-select: none;
 }
 
-.dragging {
+/* The lifted row. List rows lift themselves (beating Beer's `.list > li`); a card lifts its own surface, so the row's
+   corners don't show around the card's. */
+:is(.list, .cards) > li.dragging {
+    position: relative;
     z-index: 5;
+}
+
+.list > li.dragging,
+.cards > li.dragging > * {
     background-color: var(--surface-container-high);
     box-shadow: var(--elevate2);
+}
+
+.list > li.dragging {
     border-radius: 1rem;
+}
+
+/* Lets the lifted row leave the card while it's held. */
+.list:has(> li.dragging) {
+    overflow: visible;
+}
+
+.list > li.dragging::before {
+    opacity: 0;
 }
 
 /* Checklists */
