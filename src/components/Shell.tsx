@@ -1,5 +1,6 @@
 import { Component, For, Match, Show, Switch } from 'solid-js';
 import { User } from 'firebase/auth';
+import { EmptyState } from '@/components/Visuals.tsx';
 import { createStore, StoreContext } from '@/lib/data.ts';
 import { navigate, Route, route } from '@/lib/router.ts';
 import { dismissSnackbar, snack } from '@/lib/snackbar.ts';
@@ -34,13 +35,18 @@ export const Shell: Component<{ user: User }> = (props) => {
             <Switch>
                 <Match when={store.error()?.code === 'permission-denied'}>
                     <main class="responsive middle-align center-align">
-                        <div>
-                            <i class="extra error-text">block</i>
-                            <h5>{props.user.email} isn't on the allowlist.</h5>
-                            <button class="border" onClick={() => signOutItem.onClick()}>
-                                Sign out
-                            </button>
-                        </div>
+                        <EmptyState
+                            icon="lock"
+                            shape="sided-cookie6"
+                            title="No access"
+                            action={
+                                <button class="border" onClick={() => signOutItem.onClick()}>
+                                    Sign out
+                                </button>
+                            }
+                        >
+                            {props.user.email} isn't on the allowlist.
+                        </EmptyState>
                     </main>
                 </Match>
                 <Match when={store.loading()}>

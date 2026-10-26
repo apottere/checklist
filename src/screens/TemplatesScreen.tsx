@@ -1,6 +1,7 @@
 import { Component, createMemo, createSignal, For, Show, untrack } from 'solid-js';
 import { ConfirmDialog, FormDialog, TextDialog } from '@/components/Dialog.tsx';
 import { Fab } from '@/components/Fab.tsx';
+import { EmptyState } from '@/components/Visuals.tsx';
 import { Menu, MenuItem } from '@/components/Menu.tsx';
 import { Handle, HandleProps, SortableList } from '@/components/Sortable.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
@@ -72,12 +73,15 @@ export const TemplatesScreen: Component = () => {
             <Show when={template()}>
                 {(t) => (
                     <li>
-                        <Handle {...props.handle} />
+                        <span class="tile">
+                            <i>description</i>
+                        </span>
                         <a class="max row-link" onClick={() => navigate({ name: 'template', id: t().id })}>
                             <span>{t().name}</span>
-                            <span class="muted small-text">{plural(templateItems(data(), t().id).length, 'item')}</span>
+                            <span class="muted">{plural(templateItems(data(), t().id).length, 'item')}</span>
                         </a>
                         <Menu items={menu(t())} />
+                        <Handle {...props.handle} />
                     </li>
                 )}
             </Show>
@@ -97,11 +101,12 @@ export const TemplatesScreen: Component = () => {
             <Show when={folder()}>
                 {(f) => (
                     <li class="folder">
-                        <Handle {...props.handle} />
-                        <i class="muted">{open() ? 'folder_open' : 'folder'}</i>
+                        <span class="tile tile-tertiary">
+                            <i>{open() ? 'folder_open' : 'folder'}</i>
+                        </span>
                         <a class="max row-link" onClick={() => toggle(props.id)}>
                             <span>{f().name}</span>
-                            <span class="muted small-text">{plural(templateIds().length, 'template')}</span>
+                            <span class="muted">{plural(templateIds().length, 'template')}</span>
                         </a>
                         <Menu
                             items={[
@@ -117,6 +122,7 @@ export const TemplatesScreen: Component = () => {
                                 },
                             ]}
                         />
+                        <Handle {...props.handle} />
                         <Show when={open()}>
                             <Show
                                 when={templateIds().length > 0}
@@ -139,16 +145,20 @@ export const TemplatesScreen: Component = () => {
 
     return (
         <>
-            <TopBar title="Templates" />
+            <TopBar title="Templates" large />
             <main class="responsive">
                 <Show
                     when={keys().length > 0}
-                    fallback={<p class="empty">Templates are reusable lists. Tap + to make one.</p>}
+                    fallback={
+                        <EmptyState icon="library_books" shape="sided-cookie9" title="No templates yet">
+                            Templates are reusable lists that checklists are built from. Tap + to make one.
+                        </EmptyState>
+                    }
                 >
                     <SortableList
                         each={keys()}
                         onMove={(from, to) => commit(moveTopLevel(data(), from, to))}
-                        class="list"
+                        class="list tonal"
                     >
                         {(key, handle) =>
                             key.startsWith('f:') ? (

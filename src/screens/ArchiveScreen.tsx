@@ -1,6 +1,7 @@
 import { Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
 import { ConfirmDialog } from '@/components/Dialog.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
+import { EmptyState } from '@/components/Visuals.tsx';
 import { commit, commitWithUndo } from '@/lib/actions.ts';
 import { useStore } from '@/lib/data.ts';
 import { deleteTemplate, setChecklistArchived, setTemplateArchived } from '@/lib/plan.ts';
@@ -11,9 +12,9 @@ const newestFirst = (a: { createdAt: number }, b: { createdAt: number }): number
 
 export const ArchiveScreen: Component<{ tab: 'checklists' | 'templates' }> = (props) => (
     <>
-        <TopBar title="Archive" />
+        <TopBar title="Archive" large />
         <main class="responsive">
-            <div class="tabs">
+            <div class="tabs archive-tabs">
                 <a
                     classList={{ active: props.tab === 'checklists' }}
                     onClick={() => navigate({ name: 'archivedChecklists' }, true)}
@@ -48,14 +49,24 @@ const ArchivedChecklists: Component = () => {
     );
 
     return (
-        <Show when={checklists().length > 0} fallback={<p class="empty">No archived checklists.</p>}>
-            <ul class="list">
+        <Show
+            when={checklists().length > 0}
+            fallback={
+                <EmptyState icon="inventory_2" shape="pentagon" title="No archived checklists">
+                    Finished checklists end up here.
+                </EmptyState>
+            }
+        >
+            <ul class="list tonal">
                 <For each={checklists()}>
                     {(c) => (
                         <li>
+                            <span class="tile">
+                                <i>checklist</i>
+                            </span>
                             <a class="max row-link" onClick={() => navigate({ name: 'checklist', id: c.id })}>
                                 <span>{c.name}</span>
-                                <span class="muted small-text">{new Date(c.createdAt).toLocaleDateString()}</span>
+                                <span class="muted">Started {new Date(c.createdAt).toLocaleDateString()}</span>
                             </a>
                             <button
                                 class="transparent"
@@ -83,11 +94,21 @@ const ArchivedTemplates: Component = () => {
 
     return (
         <>
-            <Show when={templates().length > 0} fallback={<p class="empty">No archived templates.</p>}>
-                <ul class="list">
+            <Show
+                when={templates().length > 0}
+                fallback={
+                    <EmptyState icon="inventory_2" shape="pentagon" title="No archived templates">
+                        Templates you archive are kept here.
+                    </EmptyState>
+                }
+            >
+                <ul class="list tonal">
                     <For each={templates()}>
                         {(t) => (
                             <li>
+                                <span class="tile">
+                                    <i>description</i>
+                                </span>
                                 <span class="max">{t.name}</span>
                                 <button
                                     class="transparent"

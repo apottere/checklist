@@ -70,7 +70,9 @@ const StructureEditor: Component<{ checklist: WithId<Checklist> }> = (props) => 
                             <Show when={section()}>
                                 {(s) => (
                                     <li>
-                                        <Handle {...handle} />
+                                        <span class="tile">
+                                            <i>description</i>
+                                        </span>
                                         <span class="max">{sectionName(data(), s())}</span>
                                         <button
                                             class="circle transparent"
@@ -79,6 +81,7 @@ const StructureEditor: Component<{ checklist: WithId<Checklist> }> = (props) => 
                                         >
                                             <i>remove_circle_outline</i>
                                         </button>
+                                        <Handle {...handle} />
                                     </li>
                                 )}
                             </Show>
@@ -100,7 +103,6 @@ const StructureEditor: Component<{ checklist: WithId<Checklist> }> = (props) => 
         <li>
             <article class="group-card">
                 <div class="row">
-                    <Handle {...p.handle} />
                     <h6 class="max small">{p.group.name}</h6>
                     <Menu
                         items={[
@@ -121,6 +123,7 @@ const StructureEditor: Component<{ checklist: WithId<Checklist> }> = (props) => 
                             },
                         ]}
                     />
+                    <Handle {...p.handle} />
                 </div>
                 <Sections group={p.group} />
             </article>
@@ -150,7 +153,7 @@ const StructureEditor: Component<{ checklist: WithId<Checklist> }> = (props) => 
                 </SortableList>
 
                 <nav class="center-align">
-                    <button class="border" onClick={() => setDialog({ kind: 'addGroup' })}>
+                    <button class="secondary-container" onClick={() => setDialog({ kind: 'addGroup' })}>
                         <i>add</i>
                         <span>Add group</span>
                     </button>

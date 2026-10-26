@@ -6,8 +6,10 @@ import { TemplatePicker } from '@/components/TemplatePicker.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
 import { commit } from '@/lib/actions.ts';
 import { useStore } from '@/lib/data.ts';
-import { activeChecklists, createChecklist, moveChecklist, pickableTemplates, progress } from '@/lib/plan.ts';
+import { EmptyState, ProgressRing } from '@/components/Visuals.tsx';
+import { activeChecklists, createChecklist, moveChecklist, pickableTemplates, Progress, progress } from '@/lib/plan.ts';
 import { navigate } from '@/lib/router.ts';
+import { progressText } from '@/screens/common.tsx';
 
 export const ChecklistsScreen: Component = () => {
     const { data } = useStore();
@@ -16,11 +18,15 @@ export const ChecklistsScreen: Component = () => {
 
     return (
         <>
-            <TopBar title="Checklists" />
+            <TopBar title="Checklists" large />
             <main class="responsive">
                 <Show
                     when={ids().length > 0}
-                    fallback={<p class="empty">No active checklists. Tap + to start one from your templates.</p>}
+                    fallback={
+                        <EmptyState icon="checklist" shape="sunny" title="No checklists yet">
+                            Tap + to start one from your templates.
+                        </EmptyState>
+                    }
                 >
                     <SortableList
                         each={ids()}
@@ -30,20 +36,18 @@ export const ChecklistsScreen: Component = () => {
                         {(id, handle) => {
                             const checklist = (): { name: string } | undefined =>
                                 data().checklists.find((c) => c.id === id);
-                            const p = (): { resolved: number; total: number } => progress(data(), id);
+                            const p = (): Progress => progress(data(), id);
                             return (
                                 <Show when={checklist()}>
                                     {(c) => (
                                         <li>
                                             <article class="card" onClick={() => navigate({ name: 'checklist', id })}>
-                                                <Handle {...handle} />
+                                                <ProgressRing value={p().resolved} total={p().total} />
                                                 <div class="max">
-                                                    <h6 class="small">{c().name}</h6>
-                                                    <progress value={p().resolved} max={Math.max(p().total, 1)} />
+                                                    <p class="card-title">{c().name}</p>
+                                                    <span class="muted small-text">{progressText(p())}</span>
                                                 </div>
-                                                <span class="muted small-text">
-                                                    {p().resolved}/{p().total}
-                                                </span>
+                                                <Handle {...handle} />
                                             </article>
                                         </li>
                                     )}

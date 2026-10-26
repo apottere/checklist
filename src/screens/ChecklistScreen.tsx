@@ -1,6 +1,7 @@
 import { Component, createEffect, createMemo, createSignal, For, JSX, on, onCleanup, Show, untrack } from 'solid-js';
 import { ConfirmDialog, Dialog, TextDialog } from '@/components/Dialog.tsx';
 import { Fab } from '@/components/Fab.tsx';
+import { EmptyState, ProgressRing } from '@/components/Visuals.tsx';
 import { TemplatePicker } from '@/components/TemplatePicker.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
 import { commit, commitWithUndo } from '@/lib/actions.ts';
@@ -12,6 +13,8 @@ import {
     filterView,
     GroupView,
     pickableTemplates,
+    Progress,
+    progress,
     SectionView,
     renameChecklist,
     reopenAll,
@@ -67,6 +70,7 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     const doneView = createMemo(() => filterView(view(), (i) => i.state === 'done' && !lingering().has(i.id)));
     const skippedView = createMemo(() => filterView(view(), (i) => i.state === 'skipped' && !lingering().has(i.id)));
     const total = (): number => count(view());
+    const summary = (): Progress => progress(data(), id());
 
     const changeState = (item: WithId<ChecklistItem>, state: ItemState): void => {
         if (item.state === 'open') linger(item.id);
@@ -116,9 +120,13 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
 
     const ResolvedRow: Component<{ item: WithId<ChecklistItem> }> = (p) => (
         <li class="resolved" onClick={() => changeState(p.item, 'open')}>
-            <i>{p.item.state === 'done' ? 'check_box' : 'block'}</i>
+            <i classList={{ 'primary-text': p.item.state === 'done' }}>
+                {p.item.state === 'done' ? 'check_circle' : 'block'}
+            </i>
             <span class="max">{p.item.text}</span>
-            <i class="muted">undo</i>
+            <i class="muted" title="Reopen">
+                undo
+            </i>
         </li>
     );
 
@@ -147,48 +155,66 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
             />
             <main class="responsive">
                 <Show when={props.checklist.archived}>
-                    <article class="secondary-container row">
+                    <div class="archived-banner">
                         <i>inventory_2</i>
                         <span class="max">Archived. Template changes don't apply here.</span>
                         <button class="transparent" onClick={() => commit(setChecklistArchived(data(), id(), false))}>
                             Restore
                         </button>
-                    </article>
+                    </div>
                 </Show>
 
                 <Show
                     when={total() > 0}
                     fallback={
-                        <p class="empty">
-                            Nothing here yet. Tap + to add items, or import templates with Edit structure.
-                        </p>
+                        <EmptyState icon="playlist_add" shape="sided-cookie9" title="Nothing here yet">
+                            Tap + to add items, or import templates with Edit structure.
+                        </EmptyState>
                     }
                 >
+                    <div class="summary">
+                        <ProgressRing value={summary().resolved} total={summary().total} />
+                        <div class="max">
+                            <div class="summary-title">
+                                {summary().done} of {summary().total} done
+                            </div>
+                            <span>
+                                {summary().skipped ? `${summary().skipped} skipped` : 'Swipe an item to skip it'}
+                            </span>
+                        </div>
+                    </div>
+
                     <Show when={count(openView()) === 0}>
-                        <p class="empty">
-                            <i class="primary-text">task_alt</i> Everything is done or skipped.
-                        </p>
+                        <EmptyState icon="task_alt" shape="very-sunny" title="All done">
+                            Everything is done or skipped.
+                        </EmptyState>
                     </Show>
                     <Grouped view={openView()} row={(item) => <OpenRow item={item} />} />
 
                     <Show when={count(doneView()) > 0}>
-                        <details class="fold">
+                        <details class="fold tonal">
                             <summary>
-                                <i>check_box</i>
+                                <span class="tile tile-primary">
+                                    <i>check</i>
+                                </span>
                                 <span class="max">Done</span>
                                 <span class="muted">{count(doneView())}</span>
+                                <i class="chevron">expand_more</i>
                             </summary>
-                            <Grouped view={doneView()} row={(item) => <ResolvedRow item={item} />} />
+                            <Grouped view={doneView()} row={(item) => <ResolvedRow item={item} />} flat />
                         </details>
                     </Show>
                     <Show when={count(skippedView()) > 0}>
-                        <details class="fold">
+                        <details class="fold tonal">
                             <summary>
-                                <i>block</i>
+                                <span class="tile tile-tertiary">
+                                    <i>block</i>
+                                </span>
                                 <span class="max">Skipped</span>
                                 <span class="muted">{count(skippedView())}</span>
+                                <i class="chevron">expand_more</i>
                             </summary>
-                            <Grouped view={skippedView()} row={(item) => <ResolvedRow item={item} />} />
+                            <Grouped view={skippedView()} row={(item) => <ResolvedRow item={item} />} flat />
                         </details>
                     </Show>
                 </Show>
@@ -230,8 +256,12 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     );
 };
 
-/** Groups and sections, keyed by ID so rows survive re-renders. */
-const Grouped: Component<{ view: GroupView[]; row: (item: WithId<ChecklistItem>) => JSX.Element }> = (props) => (
+/** Groups and sections, keyed by ID so rows survive re-renders. `flat` drops the section cards, for use inside a fold. */
+const Grouped: Component<{
+    view: GroupView[];
+    row: (item: WithId<ChecklistItem>) => JSX.Element;
+    flat?: boolean;
+}> = (props) => (
     <For each={props.view.map((g) => g.group.id)}>
         {(groupId) => {
             const group = (): GroupView | undefined => props.view.find((g) => g.group.id === groupId);
@@ -240,7 +270,7 @@ const Grouped: Component<{ view: GroupView[]; row: (item: WithId<ChecklistItem>)
                     {(g) => (
                         <section class="group">
                             <Show when={g().group.name}>
-                                <h6 class="group-title">{g().group.name}</h6>
+                                <h5 class="group-title">{g().group.name}</h5>
                             </Show>
                             <For each={g().sections.map((s) => s.section.id)}>
                                 {(sectionId) => {
@@ -249,12 +279,15 @@ const Grouped: Component<{ view: GroupView[]; row: (item: WithId<ChecklistItem>)
                                     return (
                                         <Show when={section()}>
                                             {(s) => (
-                                                <>
-                                                    <div class="section-title">{s().name}</div>
+                                                <div classList={{ tonal: !props.flat }}>
+                                                    <div class="section-title">
+                                                        <span>{s().name}</span>
+                                                        <span class="muted">{s().items.length}</span>
+                                                    </div>
                                                     <ul class="list">
                                                         <For each={s().items}>{(item) => props.row(item)}</For>
                                                     </ul>
-                                                </>
+                                                </div>
                                             )}
                                         </Show>
                                     );
@@ -320,6 +353,8 @@ const AddItemSheet: Component<{ checklist: WithId<Checklist>; onClose: () => voi
     return (
         <Dialog open onClose={props.onClose} class="bottom">
             <form onSubmit={submit} class="form-dialog">
+                <div class="sheet-handle" />
+                <h6>Add item</h6>
                 <div class="field label border">
                     <input
                         ref={input}

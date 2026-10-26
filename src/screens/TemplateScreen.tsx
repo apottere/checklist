@@ -15,7 +15,8 @@ import {
 } from '@/lib/plan.ts';
 import { back, navigate } from '@/lib/router.ts';
 import { Template, WithId } from '@/lib/schema.ts';
-import { NotFound } from '@/screens/common.tsx';
+import { EmptyState } from '@/components/Visuals.tsx';
+import { NotFound, plural } from '@/screens/common.tsx';
 import { MoveToFolderDialog } from '@/screens/TemplatesScreen.tsx';
 
 export const TemplateScreen: Component<{ id: string }> = (props) => {
@@ -86,14 +87,20 @@ const TemplateEditor: Component<{ template: WithId<Template> }> = (props) => {
             />
             <main class="responsive">
                 <Show when={usedBy() > 0}>
-                    <p class="muted small-text">
-                        Changes apply to {usedBy()} active checklist{usedBy() === 1 ? '' : 's'}.
+                    <p class="hint">
+                        <i>sync</i>
+                        <span>Changes apply to {plural(usedBy(), 'active checklist')}.</span>
                     </p>
+                </Show>
+                <Show when={ids().length === 0}>
+                    <EmptyState icon="format_list_bulleted" shape="flower" title="No items yet">
+                        Add the first one below.
+                    </EmptyState>
                 </Show>
                 <SortableList
                     each={ids()}
                     onMove={(from, to) => commit(moveTemplateItem(data(), props.template.id, from, to))}
-                    class="list"
+                    class="list tonal"
                 >
                     {(id, handle) => {
                         const item = (): { text: string } | undefined => items().find((i) => i.id === id);
@@ -101,7 +108,6 @@ const TemplateEditor: Component<{ template: WithId<Template> }> = (props) => {
                             <Show when={item()}>
                                 {(i) => (
                                     <li>
-                                        <Handle {...handle} />
                                         <Show
                                             when={editing() === id}
                                             fallback={
@@ -131,6 +137,7 @@ const TemplateEditor: Component<{ template: WithId<Template> }> = (props) => {
                                         >
                                             <i>delete</i>
                                         </button>
+                                        <Handle {...handle} />
                                     </li>
                                 )}
                             </Show>
@@ -138,7 +145,7 @@ const TemplateEditor: Component<{ template: WithId<Template> }> = (props) => {
                     }}
                 </SortableList>
                 <form class="add-item" onSubmit={add}>
-                    <div class="field border max">
+                    <div class="field fill round max">
                         <input
                             ref={addInput}
                             value={text()}

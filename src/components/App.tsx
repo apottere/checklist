@@ -13,9 +13,12 @@ const Login: Component = () => {
 
     return (
         <main class="responsive middle-align center-align">
-            <div>
-                <i class="extra primary-text">checklist</i>
-                <h4>Checklist</h4>
+            <div class="hero">
+                <div class="shape very-sunny slow-rotate">
+                    <i>checklist</i>
+                </div>
+                <h3>Checklist</h3>
+                <p>Reusable templates, offline-ready checklists.</p>
                 <button class="large" onClick={signIn}>
                     <i>login</i>
                     <span>Sign in with Google</span>

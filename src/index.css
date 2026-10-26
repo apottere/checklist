@@ -82,7 +82,11 @@ body.dark {
 
 :root {
     --font: Roboto, system-ui, sans-serif;
+    --radius-container: 1.5rem;
+    --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
 }
+
+/* Beer CSS overrides */
 
 /* Beats Beer's `:has(> [class*="margin"]) { padding: 0.1px }`. */
 main.responsive {
@@ -109,6 +113,159 @@ dialog::backdrop {
     background-color: rgb(0 0 0 / 32%);
 }
 
+dialog.bottom {
+    border-radius: 1.75rem 1.75rem 0 0;
+}
+
+/* Beer's own shape icons are inverted for its default colors. */
+.shape > i {
+    filter: none;
+}
+
+/* App bar */
+
+.top-bar {
+    background-color: var(--surface);
+}
+
+.top-bar .title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.375rem;
+    font-weight: 400;
+}
+
+.top-bar.large .title {
+    font-size: 1.75rem;
+    padding-inline-start: 0.25rem;
+}
+
+.sync {
+    color: var(--on-surface-variant);
+}
+
+/* Shared */
+
+.muted {
+    color: var(--on-surface-variant);
+}
+
+.tonal {
+    background-color: var(--surface-container-low);
+    border-radius: var(--radius-container);
+    margin: 0 0 0.75rem;
+    padding: 0.25rem 0;
+    overflow: hidden;
+}
+
+ul.tonal {
+    list-style: none;
+}
+
+.tonal:empty {
+    display: none;
+}
+
+.list > li {
+    min-block-size: 3.5rem;
+}
+
+.tonal.list > li,
+.tonal .list > li,
+.group-card .list > li {
+    padding: 0.25rem 1rem;
+    min-block-size: 3.25rem;
+}
+
+.tonal.list > li + li,
+.tonal .list > li + li,
+.group-card .list > li + li {
+    border-block-start: 1px solid var(--surface-container-highest);
+}
+
+.tile {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: 0.875rem;
+    background-color: var(--secondary-container);
+    color: var(--on-secondary-container);
+}
+
+/* Not `.primary`/`.tertiary`: those are Beer helpers that paint solid colors. */
+.tile.tile-primary {
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
+}
+
+.tile.tile-tertiary {
+    background-color: var(--tertiary-container);
+    color: var(--on-tertiary-container);
+}
+
+/* Beer only flexes `.max` inside its own containers. */
+:is(li, summary, .profile, .summary, .card) > .max {
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.row-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    font-size: 1rem;
+}
+
+.row-link > .muted {
+    font-size: 0.8125rem;
+}
+
+.nested {
+    margin-inline-start: 1rem;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    padding: 3rem 1.5rem;
+    color: var(--on-surface-variant);
+}
+
+.empty-state > .shape {
+    inline-size: 7.5rem;
+    block-size: 7.5rem;
+    margin-block-end: 1rem !important;
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
+}
+
+.empty-state > .shape > i {
+    font-size: 3rem;
+    inline-size: 3rem;
+    block-size: 3rem;
+}
+
+.empty-state > h6 {
+    color: var(--on-surface);
+    margin: 0;
+}
+
+.empty-state > p {
+    margin: 0;
+    max-inline-size: 18rem;
+}
+
+/* FAB */
+
 .fab {
     position: fixed;
     inset-inline-end: 1rem;
@@ -130,56 +287,64 @@ dialog::backdrop {
 }
 
 .fab-menu {
-    gap: 0.5rem;
-    align-items: flex-end;
-}
-
-.fab-menu > li {
-    justify-content: flex-end;
-}
-
-.fab-menu button {
-    white-space: nowrap;
-}
-
-.muted {
-    color: var(--on-surface-variant);
-}
-
-.empty {
-    color: var(--on-surface-variant);
-    text-align: center;
-    padding: 3rem 1rem;
-}
-
-.title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.sync {
-    color: var(--on-surface-variant);
-}
-
-/* Lists */
-
-.list > li {
-    min-block-size: 3.5rem;
-}
-
-.row-link {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    cursor: pointer;
-    overflow-wrap: anywhere;
+    align-items: flex-end;
+    gap: 0.75rem;
 }
 
-.nested {
-    margin-inline-start: 2.5rem;
+.fab-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    pointer-events: none;
 }
+
+.fab-menu.open .fab-actions {
+    pointer-events: auto;
+}
+
+.fab-action {
+    block-size: 3.5rem;
+    padding-inline: 1.25rem 1.5rem;
+    border-radius: 1.75rem;
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
+    box-shadow: var(--elevate2);
+    font-size: 1rem;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.85);
+    transform-origin: right center;
+    transition:
+        opacity 120ms ease,
+        transform 220ms var(--ease-emphasized);
+}
+
+.fab-menu.open .fab-action {
+    opacity: 1;
+    transform: none;
+    transition-delay: var(--delay);
+}
+
+.fab-toggle {
+    transition: border-radius 220ms var(--ease-emphasized);
+}
+
+.fab-toggle > i {
+    transition: transform 220ms var(--ease-emphasized);
+}
+
+.fab-menu.open .fab-toggle {
+    border-radius: 50%;
+}
+
+.fab-menu.open .fab-toggle > i {
+    transform: rotate(45deg);
+}
+
+/* Drag and drop */
 
 .handle {
     color: var(--on-surface-variant);
@@ -192,16 +357,10 @@ dialog::backdrop {
     z-index: 5;
     background-color: var(--surface-container-high);
     box-shadow: var(--elevate2);
-    border-radius: 0.75rem;
+    border-radius: 1rem;
 }
 
-.list > li.folder {
-    flex-wrap: wrap;
-}
-
-.folder > .nested {
-    flex-basis: 100%;
-}
+/* Checklists */
 
 .cards {
     list-style: none;
@@ -209,98 +368,131 @@ dialog::backdrop {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-}
-
-.card,
-.group-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    margin: 0;
+    gap: 0.5rem;
 }
 
 .card {
-    flex-direction: row;
+    display: flex;
     align-items: center;
     gap: 1rem;
+    margin: 0;
+    padding: 1rem;
+    border-radius: var(--radius-container);
+    background-color: var(--surface-container-low);
+    box-shadow: none;
     cursor: pointer;
 }
 
-.group-card {
-    margin-block-end: 0.75rem;
-}
-
-.group-card .nested {
-    margin-inline-start: 0;
+.card:active {
+    background-color: var(--surface-container);
 }
 
 .card > .max {
     flex: 1;
+    min-inline-size: 0;
 }
 
-.card progress {
-    inline-size: 100%;
-}
-
-.inline-edit {
-    font: inherit;
-    border: none;
-    border-block-end: 2px solid var(--primary);
-    background: transparent;
-    outline: none;
-    padding: 0.25rem 0;
-}
-
-.add-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-block-start: 1rem;
-}
-
-.add-item .field {
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 500;
     margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.ring {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 3rem;
+    block-size: 3rem;
+}
+
+.ring > svg {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+}
+
+.ring-track,
+.ring-value {
+    fill: none;
+    stroke-width: 4;
+}
+
+.ring-track {
+    stroke: var(--surface-container-highest);
+}
+
+.ring-value {
+    stroke: var(--primary);
+    stroke-linecap: round;
+    transition: stroke-dasharray 400ms var(--ease-emphasized);
+}
+
+.ring > span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--on-surface-variant);
+}
+
+.ring.complete {
+    border-radius: 50%;
+    background-color: var(--primary);
+}
+
+.ring.complete > svg {
+    display: none;
+}
+
+.ring.complete > i {
+    color: var(--on-primary);
 }
 
 /* Checklist */
 
-.group-title {
-    margin-block: 1.5rem 0;
-}
-
-.section-title {
-    color: var(--primary);
-    font-size: 0.875rem;
-    font-weight: 500;
-    margin-block: 1rem 0;
-}
-
-.list > li.skipped {
-    opacity: 0.5;
-}
-
-.list > li.resolved {
-    cursor: pointer;
-    color: var(--on-surface-variant);
-}
-
-.fold {
-    margin-block-start: 1.5rem;
-}
-
-.fold > summary {
+.summary {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.75rem 0;
-    cursor: pointer;
-    list-style: none;
-    border-block-start: 1px solid var(--outline-variant);
+    padding: 1rem 1.25rem;
+    margin-block-end: 1rem;
+    border-radius: 1.75rem;
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
 }
 
-.fold > summary::-webkit-details-marker {
-    display: none;
+.summary .ring-track {
+    stroke: color-mix(in srgb, var(--on-primary-container) 15%, transparent);
+}
+
+.summary .ring > span {
+    color: var(--on-primary-container);
+}
+
+.summary-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.group-title {
+    margin: 1.5rem 0.25rem 0.75rem;
+    font-size: 1.375rem;
+    font-weight: 400;
+}
+
+.section-title + .list {
+    margin: 0;
+    padding: 0;
+}
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.875rem 1rem 0.25rem;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .item {
@@ -323,6 +515,171 @@ dialog::backdrop {
     text-decoration: line-through;
 }
 
+.list > li.skipped {
+    opacity: 0.5;
+}
+
+.list > li.resolved {
+    cursor: pointer;
+    color: var(--on-surface-variant);
+    font-size: 1rem;
+}
+
+.fold {
+    margin-block-start: 0.75rem;
+}
+
+.fold > summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    font-size: 1rem;
+}
+
+.fold > summary::-webkit-details-marker {
+    display: none;
+}
+
+.fold > summary > .chevron {
+    color: var(--on-surface-variant);
+    transition: transform 220ms var(--ease-emphasized);
+}
+
+.fold[open] > summary > .chevron {
+    transform: rotate(180deg);
+}
+
+.fold .group-title {
+    font-size: 1rem;
+    margin: 0.5rem 1rem 0;
+}
+
+.archived-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    margin-block-end: 1rem;
+    border-radius: var(--radius-container);
+    background-color: var(--tertiary-container);
+    color: var(--on-tertiary-container);
+}
+
+/* Templates and structure */
+
+.list > li.folder {
+    flex-wrap: wrap;
+}
+
+.folder > .nested {
+    flex-basis: 100%;
+}
+
+.group-card {
+    margin: 0 0 0.75rem;
+    padding: 0.5rem 0;
+    border-radius: var(--radius-container);
+    background-color: var(--surface-container-low);
+    box-shadow: none;
+}
+
+.group-card > .row {
+    padding-inline: 1rem;
+}
+
+.group-card .nested {
+    margin-inline-start: 0;
+}
+
+.inline-edit {
+    font: inherit;
+    border: none;
+    border-block-end: 2px solid var(--primary);
+    background: transparent;
+    outline: none;
+    padding: 0.25rem 0;
+}
+
+.add-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block-start: 0.5rem;
+}
+
+.add-item .field {
+    margin: 0;
+}
+
+.hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0.25rem 0.75rem;
+    color: var(--on-surface-variant);
+    font-size: 0.875rem;
+}
+
+/* Sign-in and settings */
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+}
+
+.hero > .shape {
+    inline-size: 9rem;
+    block-size: 9rem;
+    margin-block-end: 1rem !important;
+    background-color: var(--primary);
+    color: var(--on-primary);
+}
+
+.hero > .shape > i {
+    font-size: 4rem;
+    inline-size: 4rem;
+    block-size: 4rem;
+}
+
+.hero > p {
+    margin: 0 0 1.5rem;
+    color: var(--on-surface-variant);
+}
+
+.avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 3.5rem;
+    block-size: 3.5rem;
+    border-radius: 50%;
+    background-color: var(--primary);
+    color: var(--on-primary);
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.row-button {
+    cursor: pointer;
+}
+
+.archive-tabs {
+    margin-block-end: 1rem;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+
 /* Dialogs */
 
 .form-dialog {
@@ -343,4 +700,12 @@ dialog::backdrop {
 .more-templates > summary {
     cursor: pointer;
     padding-block: 0.5rem;
+}
+
+.sheet-handle {
+    inline-size: 2rem;
+    block-size: 0.25rem;
+    margin: -0.5rem auto 0.25rem;
+    border-radius: 1rem;
+    background-color: var(--outline-variant);
 }

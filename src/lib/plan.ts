@@ -552,7 +552,17 @@ export function filterView(view: GroupView[], keep: (item: WithId<ChecklistItem>
         .filter((g) => g.sections.length > 0);
 }
 
-export function progress(d: Data, checklistId: string): { resolved: number; total: number } {
+export interface Progress {
+    done: number;
+    skipped: number;
+    /** Done or skipped. */
+    resolved: number;
+    total: number;
+}
+
+export function progress(d: Data, checklistId: string): Progress {
     const items = d.checklistItems.filter((i) => i.checklistId === checklistId);
-    return { resolved: items.filter((i) => i.state !== 'open').length, total: items.length };
+    const done = items.filter((i) => i.state === 'done').length;
+    const skipped = items.filter((i) => i.state === 'skipped').length;
+    return { done, skipped, resolved: done + skipped, total: items.length };
 }

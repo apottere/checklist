@@ -3,12 +3,15 @@ import { Menu, MenuItem } from '@/components/Menu.tsx';
 import { useStore } from '@/lib/data.ts';
 import { createOnline } from '@/lib/primitives.ts';
 
-export const TopBar: ParentComponent<{ title: string; onBack?: () => void; menu?: MenuItem[] }> = (props) => {
+/** `large` is for top-level screens; detail screens get a compact bar with a back button. */
+export const TopBar: ParentComponent<{ title: string; large?: boolean; onBack?: () => void; menu?: MenuItem[] }> = (
+    props
+) => {
     const store = useStore();
     const online = createOnline();
 
     return (
-        <header class="fixed">
+        <header class="fixed top-bar" classList={{ large: props.large }}>
             <nav>
                 <Show when={props.onBack}>
                     {(onBack) => (
