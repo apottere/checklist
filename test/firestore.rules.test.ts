@@ -10,8 +10,27 @@ import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, setLogLevel, updat
 import { afterAll, beforeAll, beforeEach, describe, test } from 'vitest';
 
 const allowed = 'me@example.com';
-const list = { name: 'Groceries', createdAt: 1 };
-const item = { listId: 'l1', text: 'Milk', done: false, createdAt: 1 };
+const valid = {
+    folders: { name: 'Travel', order: 'a0' },
+    templates: { name: 'Toiletries', folderId: null, order: 'a0', archived: false, createdAt: 1 },
+    templateItems: { templateId: 't1', text: 'Toothbrush', order: 'a0' },
+    checklists: {
+        name: 'Trip',
+        order: 'a0',
+        archived: false,
+        createdAt: 1,
+        groups: [{ id: 'default', name: null, sections: [] }],
+    },
+    checklistItems: {
+        checklistId: 'c1',
+        sectionId: 's1',
+        templateItemId: null,
+        text: 'Toothbrush',
+        order: 'a0',
+        state: 'open',
+    },
+};
+const collections = Object.keys(valid) as (keyof typeof valid)[];
 
 let env: RulesTestEnvironment;
 
@@ -31,8 +50,7 @@ beforeEach(async () => {
     await env.withSecurityRulesDisabled(async (ctx) => {
         const db = ctx.firestore();
         await setDoc(doc(db, 'allowlist', allowed), {});
-        await setDoc(doc(db, 'lists', 'l1'), list);
-        await setDoc(doc(db, 'items', 'i1'), item);
+        for (const name of collections) await setDoc(doc(db, name, 'existing'), valid[name]);
     });
 });
 
@@ -40,55 +58,63 @@ const as = (email: string, verified = true): ReturnType<RulesTestContext['firest
     env.authenticatedContext(email, { email, email_verified: verified }).firestore();
 
 describe('allowlisted user', () => {
-    test('can read, write, and delete lists and items', async () => {
+    test.each(collections)('can read, write, and delete %s', async (name) => {
         const db = as(allowed);
-        await assertSucceeds(getDocs(collection(db, 'lists')));
-        await assertSucceeds(getDocs(collection(db, 'items')));
-        await assertSucceeds(setDoc(doc(db, 'lists', 'l2'), list));
-        await assertSucceeds(updateDoc(doc(db, 'lists', 'l1'), { name: 'Renamed' }));
-        await assertSucceeds(setDoc(doc(db, 'items', 'i2'), item));
-        await assertSucceeds(updateDoc(doc(db, 'items', 'i1'), { done: true }));
-        await assertSucceeds(deleteDoc(doc(db, 'items', 'i1')));
-        await assertSucceeds(deleteDoc(doc(db, 'lists', 'l1')));
+        await assertSucceeds(getDocs(collection(db, name)));
+        await assertSucceeds(setDoc(doc(db, name, 'new'), valid[name]));
+        await assertSucceeds(updateDoc(doc(db, name, 'existing'), { order: 'a1' }));
+        await assertSucceeds(deleteDoc(doc(db, name, 'existing')));
     });
 
     test('matches the allowlist case-insensitively', async () => {
-        await assertSucceeds(getDoc(doc(as('Me@Example.com'), 'lists', 'l1')));
+        await assertSucceeds(getDoc(doc(as('Me@Example.com'), 'templates', 'existing')));
     });
 
-    test('cannot write malformed documents', async () => {
+    test.each(collections)('cannot write %s with extra or missing fields', async (name) => {
         const db = as(allowed);
-        await assertFails(setDoc(doc(db, 'lists', 'l2'), { ...list, extra: true }));
-        await assertFails(setDoc(doc(db, 'lists', 'l2'), { ...list, name: '' }));
-        await assertFails(setDoc(doc(db, 'lists', 'l2'), { name: 'No timestamp' }));
-        await assertFails(setDoc(doc(db, 'items', 'i2'), { ...item, done: 'yes' }));
-        await assertFails(setDoc(doc(db, 'items', 'i2'), { ...item, text: 'x'.repeat(1001) }));
-        await assertFails(updateDoc(doc(db, 'items', 'i1'), { createdAt: 'now' }));
+        await assertFails(setDoc(doc(db, name, 'new'), { ...valid[name], extra: true }));
+        const missing: Record<string, unknown> = { ...valid[name] };
+        delete missing.order;
+        await assertFails(setDoc(doc(db, name, 'new'), missing));
     });
 
-    test('cannot access the allowlist', async () => {
+    test('cannot write invalid values', async () => {
+        const db = as(allowed);
+        await assertFails(setDoc(doc(db, 'folders', 'new'), { ...valid.folders, name: '' }));
+        await assertFails(setDoc(doc(db, 'templates', 'new'), { ...valid.templates, archived: 'no' }));
+        await assertFails(setDoc(doc(db, 'templateItems', 'new'), { ...valid.templateItems, text: 'x'.repeat(1001) }));
+        await assertFails(setDoc(doc(db, 'checklists', 'new'), { ...valid.checklists, groups: [] }));
+        await assertFails(setDoc(doc(db, 'checklistItems', 'new'), { ...valid.checklistItems, state: 'maybe' }));
+        await assertFails(updateDoc(doc(db, 'checklistItems', 'existing'), { templateItemId: 5 }));
+    });
+
+    test('cannot access the allowlist or unknown collections', async () => {
         const db = as(allowed);
         await assertFails(getDoc(doc(db, 'allowlist', allowed)));
         await assertFails(setDoc(doc(db, 'allowlist', 'friend@example.com'), {}));
+        await assertFails(setDoc(doc(db, 'lists', 'old'), { name: 'Old' }));
     });
 });
 
 describe('everyone else', () => {
     test('signed-out users are denied', async () => {
         const db = env.unauthenticatedContext().firestore();
-        await assertFails(getDoc(doc(db, 'lists', 'l1')));
-        await assertFails(setDoc(doc(db, 'lists', 'l2'), list));
+        for (const name of collections) {
+            await assertFails(getDoc(doc(db, name, 'existing')));
+            await assertFails(setDoc(doc(db, name, 'new'), valid[name]));
+        }
     });
 
     test('users not on the allowlist are denied', async () => {
         const db = as('stranger@example.com');
-        await assertFails(getDoc(doc(db, 'lists', 'l1')));
-        await assertFails(getDoc(doc(db, 'items', 'i1')));
-        await assertFails(setDoc(doc(db, 'lists', 'l2'), list));
-        await assertFails(deleteDoc(doc(db, 'lists', 'l1')));
+        for (const name of collections) {
+            await assertFails(getDoc(doc(db, name, 'existing')));
+            await assertFails(setDoc(doc(db, name, 'new'), valid[name]));
+            await assertFails(deleteDoc(doc(db, name, 'existing')));
+        }
     });
 
     test('allowlisted emails must be verified', async () => {
-        await assertFails(getDoc(doc(as(allowed, false), 'lists', 'l1')));
+        await assertFails(getDoc(doc(as(allowed, false), 'templates', 'existing')));
     });
 });

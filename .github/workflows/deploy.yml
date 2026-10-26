@@ -26,6 +26,7 @@ jobs:
                   cache: pnpm
             - run: pnpm install --frozen-lockfile
             - run: pnpm lint
+            - run: pnpm test
             - uses: google-github-actions/auth@v2
               with:
                   workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}

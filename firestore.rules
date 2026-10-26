@@ -2,35 +2,96 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // The allowlist has no client access; manage it with `pnpm allowlist` or the console.
+    // The allowlist has no client access; it's synced by the Firebase workflow.
     function isAllowed() {
       return request.auth != null
         && request.auth.token.email_verified == true
         && exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email.lower()));
     }
 
-    function isValidList(data) {
-      return data.keys().hasOnly(['name', 'createdAt'])
-        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+    function hasExactly(data, keys) {
+      return data.keys().hasAll(keys) && data.keys().hasOnly(keys);
+    }
+
+    function isText(value, max) {
+      return value is string && value.size() > 0 && value.size() <= max;
+    }
+
+    function isOrder(value) {
+      return isText(value, 100);
+    }
+
+    function isIdOrNull(value) {
+      return value == null || isText(value, 100);
+    }
+
+    function isValidFolder(data) {
+      return hasExactly(data, ['name', 'order'])
+        && isText(data.name, 200)
+        && isOrder(data.order);
+    }
+
+    function isValidTemplate(data) {
+      return hasExactly(data, ['name', 'folderId', 'order', 'archived', 'createdAt'])
+        && isText(data.name, 200)
+        && isIdOrNull(data.folderId)
+        && isOrder(data.order)
+        && data.archived is bool
         && data.createdAt is int;
     }
 
-    function isValidItem(data) {
-      return data.keys().hasOnly(['listId', 'text', 'done', 'createdAt'])
-        && data.listId is string
-        && data.text is string && data.text.size() > 0 && data.text.size() <= 1000
-        && data.done is bool
-        && data.createdAt is int;
+    function isValidTemplateItem(data) {
+      return hasExactly(data, ['templateId', 'text', 'order'])
+        && isText(data.templateId, 100)
+        && isText(data.text, 1000)
+        && isOrder(data.order);
     }
 
-    match /lists/{listId} {
-      allow read, delete: if isAllowed();
-      allow create, update: if isAllowed() && isValidList(request.resource.data);
+    // Group and section shapes aren't checked; rules can't iterate lists.
+    function isValidChecklist(data) {
+      return hasExactly(data, ['name', 'order', 'archived', 'createdAt', 'groups'])
+        && isText(data.name, 200)
+        && isOrder(data.order)
+        && data.archived is bool
+        && data.createdAt is int
+        && data.groups is list
+        && data.groups.size() > 0
+        && data.groups.size() <= 100;
     }
 
-    match /items/{itemId} {
+    function isValidChecklistItem(data) {
+      return hasExactly(data, ['checklistId', 'sectionId', 'templateItemId', 'text', 'order', 'state'])
+        && isText(data.checklistId, 100)
+        && isText(data.sectionId, 100)
+        && isIdOrNull(data.templateItemId)
+        && isText(data.text, 1000)
+        && isOrder(data.order)
+        && data.state in ['open', 'done', 'skipped'];
+    }
+
+    match /folders/{id} {
       allow read, delete: if isAllowed();
-      allow create, update: if isAllowed() && isValidItem(request.resource.data);
+      allow create, update: if isAllowed() && isValidFolder(request.resource.data);
+    }
+
+    match /templates/{id} {
+      allow read, delete: if isAllowed();
+      allow create, update: if isAllowed() && isValidTemplate(request.resource.data);
+    }
+
+    match /templateItems/{id} {
+      allow read, delete: if isAllowed();
+      allow create, update: if isAllowed() && isValidTemplateItem(request.resource.data);
+    }
+
+    match /checklists/{id} {
+      allow read, delete: if isAllowed();
+      allow create, update: if isAllowed() && isValidChecklist(request.resource.data);
+    }
+
+    match /checklistItems/{id} {
+      allow read, delete: if isAllowed();
+      allow create, update: if isAllowed() && isValidChecklistItem(request.resource.data);
     }
   }
 }

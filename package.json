@@ -11,14 +11,16 @@
     "start:emulator": "firebase emulators:exec --only auth,firestore --project demo-checklist 'vite --mode emulator'",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint .",
+    "lint": "eslint --max-warnings 0 .",
     "sync-allowlist": "node scripts/sync-allowlist.js",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-checklist 'vitest run'",
+    "test": "vitest run --exclude '**/*.rules.test.ts'",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-checklist 'vitest run rules'",
     "deploy:rules": "firebase deploy --only firestore"
   },
   "dependencies": {
     "beercss": "^5.0.3",
     "firebase": "^13.1.0",
+    "fractional-indexing": "^4.0.0",
     "solid-js": "^1.9.17"
   },
   "devDependencies": {

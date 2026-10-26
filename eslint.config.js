@@ -75,6 +75,10 @@ export default defineConfig([
         },
     },
     {
+        files: ['test/**/*.ts'],
+        rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+    },
+    {
         // Tool configs are required to default-export.
         files: ['*.config.{js,ts}'],
         rules: { 'import-x/no-default-export': 'off' },

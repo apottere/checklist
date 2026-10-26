@@ -57,7 +57,7 @@ Bottom navigation with two destinations: **Checklists** (default) and **Template
 - The default group's sections come first with no group heading, then each group under its name.
 - Each section is headed by its template name. Items follow the template's order; local items come after.
 - Each open item has a checkbox. Swipe to skip.
-- Checking moves an item to a collapsed **Done** fold at the bottom of the checklist; skipping moves it to a separate collapsed **Skipped** fold. Folds keep checklist order and label each item with its section. Tapping an item in a fold reopens it.
+- Checking moves an item to the **Done** fold; skipping moves it to the **Skipped** fold. Each is a single collapsed fold at the bottom of the checklist, using the same group and section headings as the main list. Tapping an item in a fold reopens it.
 - Checklist items can't be deleted. Skipping covers "doesn't apply here".
 - Overflow menu: **Edit structure**, **Rename**, **Uncheck all**, **Unskip all**, **Archive**. Uncheck all and Unskip all ask for confirmation, so each takes two deliberate steps.
 - When every item is resolved, offer to archive in a snackbar.
@@ -74,7 +74,7 @@ Reached from a checklist's overflow menu.
 ### Templates
 
 - Folders and top-level templates in user-defined order. Folders expand to show their templates.
-- Drag to reorder folders and templates, and to move templates into or out of folders. **Move to folder** in a template's menu does the same without dragging.
+- Drag to reorder within the top level or within a folder. **Move to folder** in a template's menu moves it between them.
 - FAB creates a template or folder.
 - Template menu: **Rename**, **Move to folder**, **Archive**. Folder menu: **Rename**, **Delete**. Deleting a folder moves its templates to the top level.
 
@@ -113,7 +113,7 @@ Deleting is limited to library editing: template items, folders, and archived te
 - **Swipe to skip** on open items. To revisit if it interferes with scrolling.
 - **Drag and drop**: uses a drag handle, not long-press on the whole row, so it doesn't fight scrolling. Must work with touch. Reordering also has a menu fallback (Move up / Move down) for accessibility.
 - **Theme**: Material 3 via Beer CSS. Follows the system light/dark setting and switches live.
-- **Offline**: everything works offline; see `src/lib/firebase.ts`. All non-archived data is loaded up front so it's available offline without being opened first.
+- **Offline**: everything works offline; see `src/lib/firebase.ts`. All data is loaded up front so it's available offline without being opened first.
 
 ## Data model
 
@@ -149,4 +149,4 @@ checklistItems/{id}  checklistId, sectionId, templateItemId | null, text, order,
 
 ## Open questions
 
-- Should Done and Skipped folds be per group instead of per checklist, if groups end up representing stages (e.g. days of a trip)?
+None right now.

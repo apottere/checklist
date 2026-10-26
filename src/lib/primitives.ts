@@ -20,16 +20,26 @@ export interface QueryState<T> {
 
 export function createQuery<T>(query: Query): Accessor<QueryState<T>> {
     const [state, setState] = createSignal<QueryState<T>>({ docs: [], loading: true, pending: false });
+    // Unchanged documents keep their object identity, so lists don't re-render rows (and lose their UI state) on every
+    // snapshot.
+    let cache = new Map<string, { json: string; doc: T & { id: string } }>();
     onCleanup(
         onSnapshot(
             query,
             { includeMetadataChanges: true },
-            (snapshot) =>
-                setState({
-                    docs: snapshot.docs.map((doc) => ({ ...(doc.data() as T), id: doc.id })),
-                    loading: false,
-                    pending: snapshot.metadata.hasPendingWrites,
-                }),
+            (snapshot) => {
+                const next = new Map<string, { json: string; doc: T & { id: string } }>();
+                const docs = snapshot.docs.map((d) => {
+                    const data = d.data() as T;
+                    const json = JSON.stringify(data);
+                    const previous = cache.get(d.id);
+                    const doc = previous?.json === json ? previous.doc : { ...data, id: d.id };
+                    next.set(d.id, { json, doc });
+                    return doc;
+                });
+                cache = next;
+                setState({ docs, loading: false, pending: snapshot.metadata.hasPendingWrites });
+            },
             (error) => setState((prev) => ({ ...prev, loading: false, error }))
         )
     );

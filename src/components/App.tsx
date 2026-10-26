@@ -1,6 +1,6 @@
 import { Component, createSignal, Match, Show, Switch } from 'solid-js';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { Checklist } from '@/components/Checklist.tsx';
+import { Shell } from '@/components/Shell.tsx';
 import { auth } from '@/lib/firebase.ts';
 import { createAuthUser } from '@/lib/primitives.ts';
 
@@ -39,7 +39,7 @@ export const App: Component = () => {
             <Match when={user() === null}>
                 <Login />
             </Match>
-            <Match when={user()}>{(user) => <Checklist user={user()} />}</Match>
+            <Match when={user()}>{(user) => <Shell user={user()} />}</Match>
         </Switch>
     );
 };

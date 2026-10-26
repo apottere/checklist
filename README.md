@@ -1,6 +1,6 @@
 # Checklist
 
-Personal checklist PWA. Hosted on GitHub Pages; data in Firestore, which caches offline and syncs when back online. Only allowlisted emails can sign in.
+Personal checklist PWA. Hosted on GitHub Pages; data in Firestore, which caches offline and syncs when back online. Only allowlisted emails can sign in. See [docs/DESIGN.md](docs/DESIGN.md) for how it works.
 
 ## Setup
 
@@ -30,6 +30,7 @@ Edit the `ALLOWLIST` secret, then run the Firebase workflow. It adds and removes
 Requires Node (see `.nvmrc`) and pnpm. Run `pnpm install` first.
 
 - `pnpm start:emulator` runs the app against local Auth and Firestore emulators. Add your test email to `allowlist` in the emulator UI at http://127.0.0.1:4000.
+- `pnpm test` runs unit tests, including template sync (`src/lib/plan.ts`).
 - `pnpm test:rules` tests `firestore.rules` against the emulator. Requires Java 21+.
 - `pnpm start` runs against the real project. It needs `.env.local`:
     ```sh
