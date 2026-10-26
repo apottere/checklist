@@ -18,7 +18,7 @@ export const Menu: Component<{ items: MenuItem[]; icon?: string; label?: string;
         >
             <i>{props.icon ?? 'more_vert'}</i>
         </button>
-        <menu class="left no-wrap">
+        <menu class="left no-wrap app-menu">
             {props.header}
             <For each={props.items}>
                 {(item) => (

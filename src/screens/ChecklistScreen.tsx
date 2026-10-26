@@ -28,8 +28,8 @@ import { loadSetting, saveSetting } from '@/lib/settings.ts';
 import { showSnackbar } from '@/lib/snackbar.ts';
 import { NotFound } from '@/screens/common.tsx';
 
-/** How long a resolved row stays in place, so a mis-tap can be caught before the list shifts. */
-const LINGER_MS = 700;
+/** Matches the `leaving` collapse animation in index.css. */
+const LEAVE_MS = 240;
 /** Long enough for the Undo snackbar of the last check to be used first. */
 const ALL_DONE_DELAY_MS = 5000;
 
@@ -54,26 +54,27 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     const { data } = useStore();
     const id = (): string => props.checklist.id;
     const view = createMemo(() => checklistView(data(), id()));
-    const [lingering, setLingering] = createSignal(new Set<string>());
+    // Resolved rows stay in the open list just long enough to play their collapse animation.
+    const [leaving, setLeaving] = createSignal(new Set<string>());
     const [dialog, setDialog] = createSignal<'rename' | 'uncheck' | 'unskip' | 'add'>();
 
-    const linger = (itemId: string): void => {
-        setLingering(new Set([...lingering(), itemId]));
+    const leave = (itemId: string): void => {
+        setLeaving(new Set([...leaving(), itemId]));
         setTimeout(() => {
-            const next = new Set(lingering());
+            const next = new Set(leaving());
             next.delete(itemId);
-            setLingering(next);
-        }, LINGER_MS);
+            setLeaving(next);
+        }, LEAVE_MS);
     };
 
-    const openView = createMemo(() => filterView(view(), (i) => i.state === 'open' || lingering().has(i.id)));
-    const doneView = createMemo(() => filterView(view(), (i) => i.state === 'done' && !lingering().has(i.id)));
-    const skippedView = createMemo(() => filterView(view(), (i) => i.state === 'skipped' && !lingering().has(i.id)));
+    const openView = createMemo(() => filterView(view(), (i) => i.state === 'open' || leaving().has(i.id)));
+    const doneView = createMemo(() => filterView(view(), (i) => i.state === 'done' && !leaving().has(i.id)));
+    const skippedView = createMemo(() => filterView(view(), (i) => i.state === 'skipped' && !leaving().has(i.id)));
     const total = (): number => count(view());
     const summary = (): Progress => progress(data(), id());
 
     const changeState = (item: WithId<ChecklistItem>, state: ItemState): void => {
-        if (item.state === 'open') linger(item.id);
+        if (item.state === 'open') leave(item.id);
         const verb = { open: 'Reopened', done: 'Checked', skipped: 'Skipped' }[state];
         commitWithUndo(setItemState(data(), item.id, state), `${verb} "${item.text}"`);
     };
@@ -102,21 +103,35 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     );
     onCleanup(() => clearTimeout(allDoneTimer));
 
-    const OpenRow: Component<{ item: WithId<ChecklistItem> }> = (p) => (
-        <li
-            classList={{ skipped: p.item.state === 'skipped' }}
-            ref={(el) => swipe(el, () => changeState(p.item, 'skipped'))}
-        >
-            <label class="checkbox item max">
-                <input
-                    type="checkbox"
-                    checked={p.item.state === 'done'}
-                    onChange={(e) => changeState(p.item, e.currentTarget.checked ? 'done' : 'open')}
-                />
-                <span>{p.item.text}</span>
-            </label>
-        </li>
-    );
+    // The collapse animates from each row's measured height. Kept by ID because the state change re-creates the row.
+    const rowHeights = new Map<string, number>();
+
+    const OpenRow: Component<{ item: WithId<ChecklistItem> }> = (p) => {
+        let row!: HTMLLIElement;
+        const resolve = (state: ItemState): void => {
+            rowHeights.set(p.item.id, row.offsetHeight);
+            changeState(p.item, state);
+        };
+        return (
+            <li
+                classList={{ leaving: leaving().has(p.item.id) }}
+                style={{ '--row-height': `${rowHeights.get(p.item.id) ?? 0}px` }}
+                ref={(el) => {
+                    row = el;
+                    swipe(el, () => resolve('skipped'));
+                }}
+            >
+                <label class="checkbox item max">
+                    <input
+                        type="checkbox"
+                        checked={p.item.state === 'done'}
+                        onChange={(e) => resolve(e.currentTarget.checked ? 'done' : 'open')}
+                    />
+                    <span>{p.item.text}</span>
+                </label>
+            </li>
+        );
+    };
 
     const ResolvedRow: Component<{ item: WithId<ChecklistItem> }> = (p) => (
         <li class="resolved" onClick={() => changeState(p.item, 'open')}>

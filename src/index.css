@@ -108,6 +108,24 @@ dialog[open] {
     }
 }
 
+/* Beer's menus pause, then scale up from 80%. Fade in and grow slightly from the corner instead, without a delay. */
+menu.app-menu {
+    transform-origin: top right;
+    transform: translateY(100%) scale(0.95);
+    transition:
+        opacity 120ms ease,
+        transform 160ms var(--ease-emphasized),
+        visibility 0s linear 160ms;
+}
+
+:not([data-ui]):focus-within > menu.app-menu {
+    transform: translateY(100%);
+    transition:
+        opacity 120ms ease,
+        transform 160ms var(--ease-emphasized),
+        visibility 0s;
+}
+
 /* Theme variables don't reach ::backdrop. */
 dialog::backdrop {
     background-color: rgb(0 0 0 / 32%);
@@ -520,8 +538,25 @@ ul.tonal {
     text-decoration: line-through;
 }
 
-.list > li.skipped {
-    opacity: 0.5;
+/* Checked or skipped rows collapse upward instead of shifting the list once they're gone. */
+.list > li.leaving {
+    overflow: hidden;
+    min-block-size: 0;
+    pointer-events: none;
+    animation: row-leave 240ms var(--ease-emphasized) forwards;
+}
+
+@keyframes row-leave {
+    from {
+        block-size: var(--row-height);
+        opacity: 1;
+    }
+    to {
+        block-size: 0;
+        padding-block: 0;
+        opacity: 0;
+        border-color: transparent;
+    }
 }
 
 .list > li.resolved {

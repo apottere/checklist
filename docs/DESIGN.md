@@ -115,7 +115,7 @@ Deleting is limited to library editing: template items, folders, and archived te
 
 ## Interaction details
 
-- **Undo**: checking, skipping, reopening, and archiving show a snackbar with Undo. Rows move to a fold after a short delay, so a mis-tap can be caught before the list shifts.
+- **Undo**: checking, skipping, reopening, and archiving show a snackbar with Undo. Checked and skipped rows collapse out of the list immediately; Undo covers mis-taps.
 - **Swipe to skip** on open items. To revisit if it interferes with scrolling.
 - **Drag and drop**: uses a drag handle, not long-press on the whole row, so it doesn't fight scrolling. Must work with touch. Reordering also has a menu fallback (Move up / Move down) for accessibility.
 - **Theme**: Material 3 via Beer CSS. Follows the system light/dark setting and switches live.
