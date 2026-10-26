@@ -56,6 +56,11 @@ export default defineConfig([
         },
     },
     {
+        // Solid assigns `let el!: T; <div ref={el} />` at compile time.
+        files: ['**/*.tsx'],
+        rules: { 'no-unassigned-vars': 'off' },
+    },
+    {
         files: ['src/**/*.{ts,tsx}'],
         rules: {
             'no-restricted-imports': [

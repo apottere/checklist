@@ -23,8 +23,12 @@ export default defineConfig({
                 name: 'Checklist',
                 short_name: 'Checklist',
                 display: 'standalone',
-                theme_color: '#1c1917',
-                background_color: '#1c1917',
+                theme_color: '#fbf8fd',
+                background_color: '#fbf8fd',
+            },
+            workbox: {
+                // Beer CSS ships four icon fonts; only the outlined one is used.
+                globPatterns: ['**/*.{js,css,html,svg,png,ico}', 'assets/material-symbols-outlined-*.woff2'],
             },
         }),
     ],

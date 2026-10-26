@@ -1,6 +1,7 @@
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js';
+import { Component, createEffect, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
 import { signOut, User } from 'firebase/auth';
 import { FirestoreError } from 'firebase/firestore';
+import { ConfirmDialog, Dialog, TextDialog } from '@/components/Dialog.tsx';
 import { auth } from '@/lib/firebase.ts';
 import {
     addItem,
@@ -23,10 +24,17 @@ import { loadSetting, saveSetting } from '@/lib/settings.ts';
 const isPermissionDenied = (error: Error): boolean =>
     error instanceof FirestoreError && error.code === 'permission-denied';
 
+// Beer CSS menus stay open while focus is inside them.
+const closeMenus = (): void => (document.activeElement as HTMLElement | null)?.blur();
+
+type DialogName = 'newList' | 'rename' | 'delete' | 'addItem';
+
 export const Checklist: Component<{ user: User }> = (props) => {
     const lists = createQuery<List>(listsQuery);
     const items = createQuery<Item>(itemsQuery);
     const online = createOnline();
+    const [dialog, setDialog] = createSignal<DialogName>();
+    const closeDialog = (): void => void setDialog(undefined);
 
     const [selectedId, setSelectedId] = createSignal(loadSetting('selectedList'));
     const selected = (): WithId<List> | undefined =>
@@ -41,119 +49,194 @@ export const Checklist: Component<{ user: User }> = (props) => {
         return grouped;
     });
     const itemsOf = (listId: string): WithId<Item>[] => itemsByList().get(listId) ?? [];
+    const selectedItems = (): WithId<Item>[] => itemsOf(selected()?.id ?? '');
 
     const error = (): Error | undefined => lists().error ?? items().error ?? writeError();
-    const syncStatus = (): string => {
-        if (!online()) return 'Offline, saved on this device';
-        if (lists().pending || items().pending) return 'Syncing…';
-        return 'Synced';
-    };
-
-    const newList = (): void => {
-        const name = prompt('List name')?.trim();
-        if (name) setSelectedId(addList(name));
-    };
+    const pending = (): boolean => lists().pending || items().pending;
 
     return (
-        <div class="app">
-            <header>
-                <h1>Checklist</h1>
-                <span class="sync" classList={{ offline: !online() }}>
-                    {syncStatus()}
-                </span>
-                <button class="link" onClick={() => void signOut(auth)} title={props.user.email ?? undefined}>
-                    Sign out
-                </button>
+        <>
+            <header class="fixed">
+                <nav>
+                    <h6 class="max">Checklist</h6>
+                    <Switch>
+                        <Match when={!online()}>
+                            <i title="Offline, changes are saved on this device">cloud_off</i>
+                        </Match>
+                        <Match when={pending()}>
+                            <i title="Syncing">cloud_sync</i>
+                        </Match>
+                        <Match when={true}>
+                            <i title="Synced">cloud_done</i>
+                        </Match>
+                    </Switch>
+                    <div>
+                        <button class="circle transparent" aria-label="Account">
+                            <i>account_circle</i>
+                        </button>
+                        <menu class="left no-wrap">
+                            <li class="small-text">{props.user.email}</li>
+                            <li
+                                onClick={() => {
+                                    closeMenus();
+                                    void signOut(auth);
+                                }}
+                            >
+                                <i>logout</i>
+                                <span>Sign out</span>
+                            </li>
+                        </menu>
+                    </div>
+                </nav>
             </header>
 
-            <Show when={error()}>
-                {(error) => (
-                    <p class="error">
-                        <Show when={isPermissionDenied(error())} fallback={error().message}>
-                            {props.user.email} isn't on the allowlist.
-                        </Show>
-                    </p>
-                )}
-            </Show>
-
-            <nav>
-                <For each={lists().docs}>
-                    {(list) => (
-                        <button
-                            classList={{ selected: list.id === selected()?.id }}
-                            onClick={() => setSelectedId(list.id)}
-                        >
-                            {list.name}
-                            <span class="count">{itemsOf(list.id).filter((item) => !item.done).length}</span>
-                        </button>
+            <main class="responsive">
+                <Show when={error()}>
+                    {(error) => (
+                        <article class="error-container">
+                            <Show when={isPermissionDenied(error())} fallback={error().message}>
+                                {props.user.email} isn't on the allowlist.
+                            </Show>
+                        </article>
                     )}
-                </For>
-                <button class="add" onClick={newList}>
-                    + List
-                </button>
-            </nav>
+                </Show>
 
-            <Show
-                when={selected()}
-                fallback={<p class="status">{lists().loading ? 'Loading…' : 'Create a list to get started.'}</p>}
-            >
-                {(list) => <ListView list={list()} items={itemsOf(list().id)} />}
+                <nav class="lists no-wrap">
+                    <For each={lists().docs}>
+                        {(list) => (
+                            <button
+                                class="chip"
+                                classList={{ fill: list.id === selected()?.id }}
+                                onClick={() => setSelectedId(list.id)}
+                            >
+                                <span>{list.name}</span>
+                                <span class="count">{itemsOf(list.id).filter((item) => !item.done).length}</span>
+                            </button>
+                        )}
+                    </For>
+                    <button class="chip" onClick={() => setDialog('newList')}>
+                        <i>add</i>
+                        <span>New list</span>
+                    </button>
+                </nav>
+
+                <Show
+                    when={selected()}
+                    fallback={
+                        <div class="center-align large-padding">
+                            {lists().loading ? <progress class="circle" /> : <p>Create a list to get started.</p>}
+                        </div>
+                    }
+                >
+                    {(list) => (
+                        <ListView
+                            list={list()}
+                            items={selectedItems()}
+                            onRename={() => setDialog('rename')}
+                            onDelete={() => setDialog('delete')}
+                        />
+                    )}
+                </Show>
+            </main>
+
+            <Show when={selected()}>
+                <button class="fab extra square round" aria-label="Add item" onClick={() => setDialog('addItem')}>
+                    <i>add</i>
+                </button>
             </Show>
-        </div>
+
+            <TextDialog
+                open={dialog() === 'newList'}
+                title="New list"
+                label="Name"
+                confirm="Create"
+                onSubmit={(name) => setSelectedId(addList(name))}
+                onClose={closeDialog}
+            />
+            <TextDialog
+                open={dialog() === 'rename'}
+                title="Rename list"
+                label="Name"
+                confirm="Rename"
+                initial={selected()?.name}
+                onSubmit={(name) => {
+                    const list = selected();
+                    if (list && name !== list.name) renameList(list.id, name);
+                }}
+                onClose={closeDialog}
+            />
+            <ConfirmDialog
+                open={dialog() === 'delete'}
+                title={`Delete "${selected()?.name}"?`}
+                confirm="Delete"
+                onConfirm={() => {
+                    const list = selected();
+                    if (list) deleteList(list.id, selectedItems());
+                }}
+                onClose={closeDialog}
+            >
+                Its {selectedItems().length} items will be deleted too.
+            </ConfirmDialog>
+            <AddItemSheet
+                open={dialog() === 'addItem'}
+                onAdd={(text) => {
+                    const list = selected();
+                    if (list) addItem(list.id, text);
+                }}
+                onClose={closeDialog}
+            />
+        </>
     );
 };
 
-const ListView: Component<{ list: WithId<List>; items: WithId<Item>[] }> = (props) => {
-    const [text, setText] = createSignal('');
+const ListView: Component<{
+    list: WithId<List>;
+    items: WithId<Item>[];
+    onRename: () => void;
+    onDelete: () => void;
+}> = (props) => {
     const done = (): WithId<Item>[] => props.items.filter((item) => item.done);
 
-    const add = (e: SubmitEvent): void => {
-        e.preventDefault();
-        const value = text().trim();
-        if (!value) return;
-        addItem(props.list.id, value);
-        setText('');
-    };
-    const rename = (): void => {
-        const name = prompt('Rename list', props.list.name)?.trim();
-        if (name && name !== props.list.name) renameList(props.list.id, name);
-    };
-    const remove = (): void => {
-        if (confirm(`Delete "${props.list.name}" and its ${props.items.length} items?`)) {
-            deleteList(props.list.id, props.items);
-        }
-    };
-
     return (
-        <main>
-            <div class="list-header">
-                <h2>{props.list.name}</h2>
-                <button class="link" onClick={rename}>
-                    Rename
-                </button>
-                <button class="link danger" onClick={remove}>
-                    Delete
-                </button>
+        <>
+            <div class="row">
+                <h5 class="max">{props.list.name}</h5>
+                <div>
+                    <button class="circle transparent" aria-label="List options">
+                        <i>more_vert</i>
+                    </button>
+                    <menu class="left no-wrap">
+                        <li
+                            onClick={() => {
+                                closeMenus();
+                                props.onRename();
+                            }}
+                        >
+                            <i>edit</i>
+                            <span>Rename</span>
+                        </li>
+                        <li
+                            onClick={() => {
+                                closeMenus();
+                                props.onDelete();
+                            }}
+                        >
+                            <i>delete</i>
+                            <span>Delete list</span>
+                        </li>
+                    </menu>
+                </div>
             </div>
 
-            <form class="add-item" onSubmit={add}>
-                <input
-                    value={text()}
-                    onInput={(e) => setText(e.currentTarget.value)}
-                    placeholder="Add an item"
-                    aria-label="New item"
-                    maxLength={1000}
-                />
-                <button class="primary" type="submit">
-                    Add
-                </button>
-            </form>
+            <Show when={props.items.length === 0}>
+                <p class="center-align large-padding">No items yet. Tap + to add some.</p>
+            </Show>
 
-            <ul class="items">
+            <ul class="list">
                 <For each={props.items}>
                     {(item) => (
-                        <li classList={{ done: item.done }}>
-                            <label>
+                        <li>
+                            <label class="checkbox item max">
                                 <input
                                     type="checkbox"
                                     checked={item.done}
@@ -161,8 +244,12 @@ const ListView: Component<{ list: WithId<List>; items: WithId<Item>[] }> = (prop
                                 />
                                 <span>{item.text}</span>
                             </label>
-                            <button class="link danger" onClick={() => deleteItem(item.id)} aria-label="Delete item">
-                                ✕
+                            <button
+                                class="circle transparent small"
+                                aria-label="Delete item"
+                                onClick={() => deleteItem(item.id)}
+                            >
+                                <i>close</i>
                             </button>
                         </li>
                     )}
@@ -170,10 +257,48 @@ const ListView: Component<{ list: WithId<List>; items: WithId<Item>[] }> = (prop
             </ul>
 
             <Show when={done().length > 0}>
-                <button class="link" onClick={() => deleteItems(done())}>
-                    Clear {done().length} done
-                </button>
+                <nav class="center-align top-margin">
+                    <button class="border" onClick={() => deleteItems(done())}>
+                        <i>delete_sweep</i>
+                        <span>Clear {done().length} done</span>
+                    </button>
+                </nav>
             </Show>
-        </main>
+        </>
+    );
+};
+
+// Stays open after each add so several items can be entered in a row.
+const AddItemSheet: Component<{ open: boolean; onAdd: (text: string) => void; onClose: () => void }> = (props) => {
+    let input!: HTMLInputElement;
+    createEffect(() => {
+        if (props.open) input.value = '';
+    });
+    const add = (e: SubmitEvent): void => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (text) props.onAdd(text);
+        input.value = '';
+        input.focus();
+    };
+
+    return (
+        <Dialog open={props.open} onClose={props.onClose} class="bottom">
+            <form onSubmit={add}>
+                <div class="field label border">
+                    <input ref={input} placeholder=" " maxLength={1000} enterkeyhint="done" autofocus />
+                    <label>New item</label>
+                </div>
+                <nav class="right-align">
+                    <button type="button" class="transparent" onClick={() => props.onClose()}>
+                        Done
+                    </button>
+                    <button type="submit">
+                        <i>add</i>
+                        <span>Add</span>
+                    </button>
+                </nav>
+            </form>
+        </Dialog>
     );
 };

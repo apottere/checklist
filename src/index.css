@@ -1,206 +1,141 @@
+/* Material 3 scheme generated from #2563eb with material-dynamic-colors. */
+:root,
+body.light {
+    --primary: #0053db;
+    --on-primary: #ffffff;
+    --primary-container: #dbe1ff;
+    --on-primary-container: #00174b;
+    --secondary: #595e72;
+    --on-secondary: #ffffff;
+    --secondary-container: #dde1f9;
+    --on-secondary-container: #161b2c;
+    --tertiary: #745470;
+    --on-tertiary: #ffffff;
+    --tertiary-container: #ffd6f8;
+    --on-tertiary-container: #2b122b;
+    --error: #ba1a1a;
+    --on-error: #ffffff;
+    --error-container: #ffdad6;
+    --on-error-container: #410002;
+    --background: #fefbff;
+    --on-background: #1b1b1f;
+    --surface: #fbf8fd;
+    --on-surface: #1b1b1f;
+    --surface-variant: #e2e2ec;
+    --on-surface-variant: #45464f;
+    --outline: #757680;
+    --outline-variant: #c5c6d0;
+    --shadow: #000000;
+    --scrim: #000000;
+    --inverse-surface: #303034;
+    --inverse-on-surface: #f2f0f4;
+    --inverse-primary: #b4c5ff;
+    --surface-dim: #dbd9dd;
+    --surface-bright: #fbf8fd;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #f5f3f7;
+    --surface-container: #efedf1;
+    --surface-container-high: #e9e7ec;
+    --surface-container-highest: #e4e2e6;
+    color-scheme: light;
+}
+
+body.dark {
+    --primary: #b4c5ff;
+    --on-primary: #002a78;
+    --primary-container: #003ea8;
+    --on-primary-container: #dbe1ff;
+    --secondary: #c1c5dd;
+    --on-secondary: #2b3042;
+    --secondary-container: #414659;
+    --on-secondary-container: #dde1f9;
+    --tertiary: #e2bbdb;
+    --on-tertiary: #422741;
+    --tertiary-container: #5a3d58;
+    --on-tertiary-container: #ffd6f8;
+    --error: #ffb4ab;
+    --on-error: #690005;
+    --error-container: #93000a;
+    --on-error-container: #ffb4ab;
+    --background: #1b1b1f;
+    --on-background: #e4e2e6;
+    --surface: #131316;
+    --on-surface: #e4e2e6;
+    --surface-variant: #45464f;
+    --on-surface-variant: #c5c6d0;
+    --outline: #8f909a;
+    --outline-variant: #45464f;
+    --shadow: #000000;
+    --scrim: #000000;
+    --inverse-surface: #e4e2e6;
+    --inverse-on-surface: #303034;
+    --inverse-primary: #0053db;
+    --surface-dim: #131316;
+    --surface-bright: #39393c;
+    --surface-container-lowest: #0d0e11;
+    --surface-container-low: #1b1b1f;
+    --surface-container: #1f1f23;
+    --surface-container-high: #292a2d;
+    --surface-container-highest: #343438;
+    color-scheme: dark;
+}
+
 :root {
-    --bg: #fafaf9;
-    --surface: #ffffff;
-    --text: #1c1917;
-    --muted: #78716c;
-    --border: #e7e5e4;
-    --accent: #2563eb;
-    --accent-text: #ffffff;
-    --danger: #dc2626;
-    --warn: #b45309;
-
-    color-scheme: light dark;
-    font-family: system-ui, sans-serif;
-    font-size: 16px;
-    line-height: 1.4;
+    --font: Roboto, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg: #1c1917;
-        --surface: #292524;
-        --text: #f5f5f4;
-        --muted: #a8a29e;
-        --border: #44403c;
-        --accent: #60a5fa;
-        --accent-text: #0c0a09;
-        --danger: #f87171;
-        --warn: #fbbf24;
-    }
+/* Beats Beer's `:has(> [class*="margin"]) { padding: 0.1px }`. */
+main.responsive {
+    padding-inline: 1rem;
+    /* Keeps the last item clear of the FAB. */
+    padding-block-end: 6rem;
 }
 
-* {
-    box-sizing: border-box;
+.item ~ button > i {
+    color: var(--on-surface-variant);
 }
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
+/* Beer CSS also transitions visibility, so an opening dialog is briefly unfocusable and autofocus misses. */
+dialog[open] {
+    transition-property: opacity, transform;
 }
 
-button,
-input {
-    font: inherit;
-    color: inherit;
+/* Theme variables don't reach ::backdrop. */
+dialog::backdrop {
+    background-color: rgb(0 0 0 / 32%);
 }
 
-button {
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    border-radius: 6px;
-    padding: 0.4rem 0.75rem;
+.fab {
+    position: fixed;
+    inset-inline-end: 1rem;
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    z-index: 10;
 }
 
-button.primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-text);
-}
-
-button.link {
-    border: none;
-    background: none;
-    padding: 0.25rem;
-    color: var(--muted);
-}
-
-button.danger {
-    color: var(--danger);
-}
-
-.app,
-.login {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 1rem;
-    padding-top: max(1rem, env(safe-area-inset-top));
-}
-
-.login {
-    text-align: center;
-    padding-top: 20vh;
-}
-
-.status {
-    color: var(--muted);
-    text-align: center;
-    padding: 2rem 1rem;
-}
-
-.error {
-    color: var(--danger);
-}
-
-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-header h1 {
-    font-size: 1.25rem;
-    margin: 0;
-    flex: 1;
-}
-
-.sync {
-    font-size: 0.8rem;
-    color: var(--muted);
-}
-
-.sync.offline {
-    color: var(--warn);
-}
-
-nav {
-    display: flex;
-    gap: 0.5rem;
+.lists {
     overflow-x: auto;
-    padding: 1rem 0;
+    scrollbar-width: none;
 }
 
-nav button {
-    white-space: nowrap;
+.item {
+    white-space: normal;
 }
 
-nav button.selected {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
-nav .count {
-    margin-left: 0.4rem;
-    color: var(--muted);
-    font-size: 0.8rem;
-}
-
-nav button.add {
-    border-style: dashed;
-    color: var(--muted);
-}
-
-.list-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.list-header h2 {
-    flex: 1;
-    margin: 0;
-    font-size: 1.1rem;
-    overflow-wrap: anywhere;
-}
-
-.add-item {
-    display: flex;
-    gap: 0.5rem;
-    margin: 1rem 0;
-}
-
-.add-item input {
-    flex: 1;
-    min-width: 0;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface);
-}
-
-.items {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.items li {
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-}
-
-.items label {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    cursor: pointer;
-    overflow-wrap: anywhere;
-}
-
-.items input[type="checkbox"] {
-    width: 1.25rem;
-    height: 1.25rem;
+/* The checkbox icon is drawn over this input, so it mustn't shrink when the text wraps. */
+.item > input {
     flex: none;
-    accent-color: var(--accent);
 }
 
-.items li.done span {
-    color: var(--muted);
+.item > span {
+    white-space: normal;
+    font-size: 1rem;
+}
+
+.item > input:checked + span {
+    color: var(--on-surface-variant);
     text-decoration: line-through;
+}
+
+.count {
+    opacity: 0.7;
 }

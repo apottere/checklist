@@ -12,12 +12,16 @@ const Login: Component = () => {
     };
 
     return (
-        <main class="login">
-            <h1>Checklist</h1>
-            <button class="primary" onClick={signIn}>
-                Sign in with Google
-            </button>
-            <Show when={error()}>{(message) => <p class="error">{message()}</p>}</Show>
+        <main class="responsive middle-align center-align">
+            <div>
+                <i class="extra primary-text">checklist</i>
+                <h4>Checklist</h4>
+                <button class="large" onClick={signIn}>
+                    <i>login</i>
+                    <span>Sign in with Google</span>
+                </button>
+                <Show when={error()}>{(message) => <p class="error-text">{message()}</p>}</Show>
+            </div>
         </main>
     );
 };
@@ -28,7 +32,9 @@ export const App: Component = () => {
     return (
         <Switch>
             <Match when={user() === undefined}>
-                <p class="status">Loading…</p>
+                <main class="responsive middle-align center-align">
+                    <progress class="circle" />
+                </main>
             </Match>
             <Match when={user() === null}>
                 <Login />
