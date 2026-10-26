@@ -1,31 +1,39 @@
-import type { Component } from 'solid-js';
-import { useAuth, useFirebaseApp } from 'solid-firebase';
-import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
-import { Match, Switch } from 'solid-js';
-import { Lists } from '@/components/Lists.tsx';
+import { Component, createSignal, Match, Show, Switch } from 'solid-js';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { Checklist } from '@/components/Checklist.tsx';
+import { auth } from '@/lib/firebase.ts';
+import { createAuthUser } from '@/lib/primitives.ts';
 
 const Login: Component = () => {
-    const app = useFirebaseApp();
-    const signIn = () => void signInWithPopup(getAuth(app), new GoogleAuthProvider());
-    return <button onClick={signIn}>Sign In with Google</button>;
+    const [error, setError] = createSignal<string>();
+    const signIn = (): void => {
+        setError(undefined);
+        signInWithPopup(auth, new GoogleAuthProvider()).catch((e: Error) => setError(e.message));
+    };
+
+    return (
+        <main class="login">
+            <h1>Checklist</h1>
+            <button class="primary" onClick={signIn}>
+                Sign in with Google
+            </button>
+            <Show when={error()}>{(message) => <p class="error">{message()}</p>}</Show>
+        </main>
+    );
 };
 
 export const App: Component = () => {
-    const app = useFirebaseApp();
-    const state = useAuth(getAuth(app));
+    const user = createAuthUser();
 
     return (
-        <Switch fallback={<Login />}>
-            <Match when={state.loading}>
-                <p>Loading...</p>
+        <Switch>
+            <Match when={user() === undefined}>
+                <p class="status">Loading…</p>
             </Match>
-            <Match when={state.error}>
+            <Match when={user() === null}>
                 <Login />
             </Match>
-            <Match when={state.data}>
-                {JSON.stringify(state.data)}
-                <Lists />
-            </Match>
+            <Match when={user()}>{(user) => <Checklist user={user()} />}</Match>
         </Switch>
     );
 };

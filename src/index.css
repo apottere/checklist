@@ -1,7 +1,206 @@
+:root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --text: #1c1917;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --accent: #2563eb;
+    --accent-text: #ffffff;
+    --danger: #dc2626;
+    --warn: #b45309;
+
+    color-scheme: light dark;
+    font-family: system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #1c1917;
+        --surface: #292524;
+        --text: #f5f5f4;
+        --muted: #a8a29e;
+        --border: #44403c;
+        --accent: #60a5fa;
+        --accent-text: #0c0a09;
+        --danger: #f87171;
+        --warn: #fbbf24;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
 html,
 body {
     margin: 0;
     padding: 0;
-    font-size: 16px;
-    color: #333;
+    background: var(--bg);
+    color: var(--text);
+}
+
+button,
+input {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 0.4rem 0.75rem;
+}
+
+button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+}
+
+button.link {
+    border: none;
+    background: none;
+    padding: 0.25rem;
+    color: var(--muted);
+}
+
+button.danger {
+    color: var(--danger);
+}
+
+.app,
+.login {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1rem;
+    padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+.login {
+    text-align: center;
+    padding-top: 20vh;
+}
+
+.status {
+    color: var(--muted);
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.error {
+    color: var(--danger);
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+header h1 {
+    font-size: 1.25rem;
+    margin: 0;
+    flex: 1;
+}
+
+.sync {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.sync.offline {
+    color: var(--warn);
+}
+
+nav {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+nav button {
+    white-space: nowrap;
+}
+
+nav button.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+nav .count {
+    margin-left: 0.4rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+nav button.add {
+    border-style: dashed;
+    color: var(--muted);
+}
+
+.list-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.list-header h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.1rem;
+    overflow-wrap: anywhere;
+}
+
+.add-item {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.add-item input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+}
+
+.items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.items li {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.items label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.items input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    accent-color: var(--accent);
+}
+
+.items li.done span {
+    color: var(--muted);
+    text-decoration: line-through;
 }

@@ -1,0 +1,46 @@
+name: Firebase
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - firestore.rules
+            - firebase.json
+            - test/**
+            - scripts/sync-allowlist.js
+            - .github/workflows/firebase.yml
+    # Editing the ALLOWLIST secret doesn't trigger a run, so run this manually afterwards.
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    id-token: write
+
+concurrency:
+    group: firebase
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v5
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+            - uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: 21
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm test:rules
+            - uses: google-github-actions/auth@v2
+              with:
+                  workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+                  service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+            - run: pnpm exec firebase deploy --only firestore:rules --project "${{ vars.FIREBASE_PROJECT_ID }}" --non-interactive
+            - run: pnpm sync-allowlist
+              env:
+                  GCLOUD_PROJECT: ${{ vars.FIREBASE_PROJECT_ID }}
+                  ALLOWLIST: ${{ secrets.ALLOWLIST }}
