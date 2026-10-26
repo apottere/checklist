@@ -1,12 +1,13 @@
-import { Component, Match, Show, Switch } from 'solid-js';
+import { Component, For, Match, Show, Switch } from 'solid-js';
 import { User } from 'firebase/auth';
 import { createStore, StoreContext } from '@/lib/data.ts';
-import { navigate, route } from '@/lib/router.ts';
+import { navigate, Route, route } from '@/lib/router.ts';
 import { dismissSnackbar, snack } from '@/lib/snackbar.ts';
-import { ArchivedChecklistsScreen, ArchivedTemplatesScreen } from '@/screens/ArchiveScreen.tsx';
+import { ArchiveScreen } from '@/screens/ArchiveScreen.tsx';
 import { ChecklistScreen } from '@/screens/ChecklistScreen.tsx';
 import { ChecklistsScreen } from '@/screens/ChecklistsScreen.tsx';
 import { signOutItem } from '@/screens/common.tsx';
+import { SettingsScreen } from '@/screens/SettingsScreen.tsx';
 import { StructureScreen } from '@/screens/StructureScreen.tsx';
 import { TemplateScreen } from '@/screens/TemplateScreen.tsx';
 import { TemplatesScreen } from '@/screens/TemplatesScreen.tsx';
@@ -18,7 +19,15 @@ export const Shell: Component<{ user: User }> = (props) => {
         const current = r();
         return 'id' in current ? current.id : '';
     };
-    const topLevel = (): boolean => r().name === 'checklists' || r().name === 'templates';
+    const destinations: { route: Route; also?: Route['name']; icon: string; label: string }[] = [
+        { route: { name: 'checklists' }, icon: 'checklist', label: 'Checklists' },
+        { route: { name: 'templates' }, icon: 'library_books', label: 'Templates' },
+        { route: { name: 'archivedChecklists' }, also: 'archivedTemplates', icon: 'inventory_2', label: 'Archive' },
+        { route: { name: 'settings' }, icon: 'settings', label: 'Settings' },
+    ];
+    const isActive = (d: (typeof destinations)[number]): boolean => r().name === d.route.name || r().name === d.also;
+    const topLevel = (): boolean => destinations.some(isActive);
+    const hasFab = (): boolean => ['checklists', 'templates', 'checklist'].includes(r().name);
 
     return (
         <StoreContext.Provider value={store}>
@@ -57,34 +66,31 @@ export const Shell: Component<{ user: User }> = (props) => {
                             <TemplateScreen id={idOf()} />
                         </Match>
                         <Match when={r().name === 'archivedChecklists'}>
-                            <ArchivedChecklistsScreen />
+                            <ArchiveScreen tab="checklists" />
                         </Match>
                         <Match when={r().name === 'archivedTemplates'}>
-                            <ArchivedTemplatesScreen />
+                            <ArchiveScreen tab="templates" />
+                        </Match>
+                        <Match when={r().name === 'settings'}>
+                            <SettingsScreen user={props.user} />
                         </Match>
                     </Switch>
                     <Show when={topLevel()}>
                         <nav class="bottom">
-                            <a
-                                classList={{ active: r().name === 'checklists' }}
-                                onClick={() => navigate({ name: 'checklists' }, true)}
-                            >
-                                <i>checklist</i>
-                                <span>Checklists</span>
-                            </a>
-                            <a
-                                classList={{ active: r().name === 'templates' }}
-                                onClick={() => navigate({ name: 'templates' }, true)}
-                            >
-                                <i>library_books</i>
-                                <span>Templates</span>
-                            </a>
+                            <For each={destinations}>
+                                {(d) => (
+                                    <a classList={{ active: isActive(d) }} onClick={() => navigate(d.route, true)}>
+                                        <i>{d.icon}</i>
+                                        <span>{d.label}</span>
+                                    </a>
+                                )}
+                            </For>
                         </nav>
                     </Show>
                 </Match>
             </Switch>
 
-            <div class="snackbar" classList={{ active: !!snack(), 'above-nav': topLevel() }}>
+            <div class="snackbar" classList={{ active: !!snack(), 'above-nav': topLevel(), 'above-fab': hasFab() }}>
                 <div class="max">{snack()?.message}</div>
                 <Show when={snack()?.action}>
                     {(action) => (

@@ -7,7 +7,7 @@ export interface MenuItem {
 }
 
 // Beer CSS menus stay open while focus is inside them.
-const closeMenus = (): void => (document.activeElement as HTMLElement | null)?.blur();
+export const closeMenus = (): void => (document.activeElement as HTMLElement | null)?.blur();
 
 export const Menu: Component<{ items: MenuItem[]; icon?: string; label?: string; header?: JSX.Element }> = (props) => (
     <div>

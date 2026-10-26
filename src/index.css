@@ -98,16 +98,9 @@ dialog[open] {
 
 /* Beer opens menus on hover for touch, but hover sticks after a tap and leaves them open. Open on focus only. */
 @media (pointer: coarse) {
-    :not(menu, [data-ui]):hover > menu:not(.active) {
+    :not(menu, [data-ui]):not(:focus-within):hover > menu:not(.active) {
         opacity: 0;
         visibility: hidden;
-        transform: scale(0.8) translateY(120%);
-    }
-
-    :not([data-ui]):focus-within > menu:not(.active) {
-        opacity: 1;
-        visibility: visible;
-        transform: scale(1) translateY(100%);
     }
 }
 
@@ -129,7 +122,24 @@ dialog::backdrop {
 }
 
 .snackbar.above-nav {
+    inset-block-end: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+.snackbar.above-nav.above-fab {
     inset-block-end: calc(10rem + env(safe-area-inset-bottom));
+}
+
+.fab-menu {
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.fab-menu > li {
+    justify-content: flex-end;
+}
+
+.fab-menu button {
+    white-space: nowrap;
 }
 
 .muted {

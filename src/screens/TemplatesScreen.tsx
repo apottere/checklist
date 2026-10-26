@@ -1,5 +1,6 @@
 import { Component, createMemo, createSignal, For, Show, untrack } from 'solid-js';
 import { ConfirmDialog, FormDialog, TextDialog } from '@/components/Dialog.tsx';
+import { Fab } from '@/components/Fab.tsx';
 import { Menu, MenuItem } from '@/components/Menu.tsx';
 import { Handle, HandleProps, SortableList } from '@/components/Sortable.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
@@ -21,7 +22,7 @@ import {
 } from '@/lib/plan.ts';
 import { navigate } from '@/lib/router.ts';
 import { Folder, Template, WithId } from '@/lib/schema.ts';
-import { plural, signOutItem } from '@/screens/common.tsx';
+import { plural } from '@/screens/common.tsx';
 
 type DialogState =
     | { kind: 'newTemplate' }
@@ -138,18 +139,7 @@ export const TemplatesScreen: Component = () => {
 
     return (
         <>
-            <TopBar
-                title="Templates"
-                menu={[
-                    { label: 'New folder', icon: 'create_new_folder', onClick: () => setDialog({ kind: 'newFolder' }) },
-                    {
-                        label: 'Archived templates',
-                        icon: 'inventory_2',
-                        onClick: () => navigate({ name: 'archivedTemplates' }),
-                    },
-                    signOutItem,
-                ]}
-            />
+            <TopBar title="Templates" />
             <main class="responsive">
                 <Show
                     when={keys().length > 0}
@@ -171,13 +161,13 @@ export const TemplatesScreen: Component = () => {
                 </Show>
             </main>
 
-            <button
-                class="fab above-nav extra square round"
-                aria-label="New template"
-                onClick={() => setDialog({ kind: 'newTemplate' })}
-            >
-                <i>add</i>
-            </button>
+            <Fab
+                aboveNav
+                items={[
+                    { label: 'New template', icon: 'description', onClick: () => setDialog({ kind: 'newTemplate' }) },
+                    { label: 'New folder', icon: 'create_new_folder', onClick: () => setDialog({ kind: 'newFolder' }) },
+                ]}
+            />
 
             <TextDialog
                 open={dialog()?.kind === 'newTemplate'}

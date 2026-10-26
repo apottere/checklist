@@ -9,7 +9,8 @@ export type Route =
     | { name: 'templates' }
     | { name: 'template'; id: string }
     | { name: 'archivedChecklists' }
-    | { name: 'archivedTemplates' };
+    | { name: 'archivedTemplates' }
+    | { name: 'settings' };
 
 function parse(hash: string): Route {
     const [, a, b, c] = hash.replace(/^#/, '').split('/');
@@ -19,6 +20,7 @@ function parse(hash: string): Route {
     if (a === 'templates') return { name: 'templates' };
     if (a === 'archive' && b === 'templates') return { name: 'archivedTemplates' };
     if (a === 'archive') return { name: 'archivedChecklists' };
+    if (a === 'settings') return { name: 'settings' };
     return { name: 'checklists' };
 }
 
@@ -38,6 +40,8 @@ export function href(route: Route): string {
             return '#/archive/checklists';
         case 'archivedTemplates':
             return '#/archive/templates';
+        case 'settings':
+            return '#/settings';
     }
 }
 

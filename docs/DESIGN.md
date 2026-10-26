@@ -44,7 +44,9 @@ Active (non-archived) checklists stay in sync with the templates they imported:
 
 ## Screens
 
-Bottom navigation with two destinations: **Checklists** (default) and **Templates**. Each has an **Archived** view reachable from its overflow menu.
+Bottom navigation with four destinations: **Checklists** (default), **Templates**, **Archive**, and **Settings**. These top-level screens have no overflow menu; detail screens (a checklist, a template) use one for actions on that item.
+
+The FAB creates things. When a screen can create more than one kind of thing, the FAB opens a menu of them.
 
 ### Checklists
 
@@ -75,7 +77,7 @@ Reached from a checklist's overflow menu.
 
 - Folders and top-level templates in user-defined order. Folders expand to show their templates.
 - Drag to reorder within the top level or within a folder. **Move to folder** in a template's menu moves it between them.
-- FAB creates a template or folder.
+- FAB menu: **New template**, **New folder**.
 - Template menu: **Rename**, **Move to folder**, **Archive**. Folder menu: **Rename**, **Delete**. Deleting a folder moves its templates to the top level.
 
 ### Template
@@ -85,11 +87,15 @@ Reached from a checklist's overflow menu.
 - Items can be deleted here.
 - All changes [sync](#template-sync) to active checklists.
 
-### Archived
+### Archive
 
-- Archived checklists and templates, newest first, each with **Restore**.
+- Tabs for archived checklists and archived templates, newest first, each with **Restore**.
 - Archived templates can also be **deleted permanently**, with confirmation. Archived checklists can't be deleted.
 - Archived templates aren't offered for import.
+
+### Settings
+
+- The signed-in account and **Sign out**.
 
 ## Adding items
 

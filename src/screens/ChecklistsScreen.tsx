@@ -1,5 +1,6 @@
 import { Component, createMemo, createSignal, Show } from 'solid-js';
 import { FormDialog, TextField } from '@/components/Dialog.tsx';
+import { Fab } from '@/components/Fab.tsx';
 import { Handle, SortableList } from '@/components/Sortable.tsx';
 import { TemplatePicker } from '@/components/TemplatePicker.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
@@ -7,7 +8,6 @@ import { commit } from '@/lib/actions.ts';
 import { useStore } from '@/lib/data.ts';
 import { activeChecklists, createChecklist, moveChecklist, pickableTemplates, progress } from '@/lib/plan.ts';
 import { navigate } from '@/lib/router.ts';
-import { signOutItem } from '@/screens/common.tsx';
 
 export const ChecklistsScreen: Component = () => {
     const { data } = useStore();
@@ -16,17 +16,7 @@ export const ChecklistsScreen: Component = () => {
 
     return (
         <>
-            <TopBar
-                title="Checklists"
-                menu={[
-                    {
-                        label: 'Archived checklists',
-                        icon: 'inventory_2',
-                        onClick: () => navigate({ name: 'archivedChecklists' }),
-                    },
-                    signOutItem,
-                ]}
-            />
+            <TopBar title="Checklists" />
             <main class="responsive">
                 <Show
                     when={ids().length > 0}
@@ -64,13 +54,7 @@ export const ChecklistsScreen: Component = () => {
                 </Show>
             </main>
 
-            <button
-                class="fab above-nav extra square round"
-                aria-label="New checklist"
-                onClick={() => setCreating(true)}
-            >
-                <i>add</i>
-            </button>
+            <Fab aboveNav items={[{ label: 'New checklist', icon: 'checklist', onClick: () => setCreating(true) }]} />
 
             <Show when={creating()}>
                 <NewChecklistDialog onClose={() => setCreating(false)} />

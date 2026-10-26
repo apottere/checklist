@@ -1,5 +1,6 @@
 import { Component, createEffect, createMemo, createSignal, For, JSX, on, onCleanup, Show, untrack } from 'solid-js';
 import { ConfirmDialog, Dialog, TextDialog } from '@/components/Dialog.tsx';
+import { Fab } from '@/components/Fab.tsx';
 import { TemplatePicker } from '@/components/TemplatePicker.tsx';
 import { TopBar } from '@/components/TopBar.tsx';
 import { commit, commitWithUndo } from '@/lib/actions.ts';
@@ -193,9 +194,7 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
                 </Show>
             </main>
 
-            <button class="fab extra square round" aria-label="Add item" onClick={() => setDialog('add')}>
-                <i>add</i>
-            </button>
+            <Fab items={[{ label: 'Add item', icon: 'add', onClick: () => setDialog('add') }]} />
 
             <TextDialog
                 open={dialog() === 'rename'}
