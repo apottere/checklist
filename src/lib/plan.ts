@@ -357,6 +357,11 @@ export const setChecklistArchived = (d: Data, id: string, archived: boolean): Op
     update('checklists', find(d.checklists, id), { archived }),
 ];
 
+export const deleteChecklist = (d: Data, id: string): Op[] => [
+    remove('checklists', find(d.checklists, id)),
+    ...d.checklistItems.filter((i) => i.checklistId === id).map((i) => remove('checklistItems', i)),
+];
+
 export function moveChecklist(d: Data, from: number, to: number): Op[] {
     const list = activeChecklists(d);
     return [update('checklists', list[from], { order: keyForMove(list, from, to) })];

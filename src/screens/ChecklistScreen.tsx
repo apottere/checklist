@@ -8,6 +8,7 @@ import { TopBar } from '@/components/TopBar.tsx';
 import { commit, commitWithUndo } from '@/lib/actions.ts';
 import { useStore } from '@/lib/data.ts';
 import { swipe } from '@/lib/gestures.ts';
+import { DeleteChecklistDialog } from '@/screens/ArchiveScreen.tsx';
 import {
     addItem,
     checklistView,
@@ -53,7 +54,7 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
     const { data } = useStore();
     const id = (): string => props.checklist.id;
     const view = createMemo(() => checklistView(data(), id()));
-    const [dialog, setDialog] = createSignal<'rename' | 'uncheck' | 'unskip' | 'add'>();
+    const [dialog, setDialog] = createSignal<'rename' | 'uncheck' | 'unskip' | 'add' | 'delete'>();
 
     const openView = createMemo(() => filterView(view(), (i) => i.state === 'open'));
     const doneView = createMemo(() => filterView(view(), (i) => i.state === 'done'));
@@ -146,6 +147,9 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
                               onClick: () => commit(setChecklistArchived(data(), id(), false)),
                           }
                         : { label: 'Archive', icon: 'archive', onClick: archive },
+                    ...(props.checklist.archived
+                        ? [{ label: 'Delete forever', icon: 'delete_forever', onClick: () => setDialog('delete') }]
+                        : []),
                 ]}
             />
             <main class="responsive">
@@ -246,6 +250,13 @@ const ChecklistView: Component<{ checklist: WithId<Checklist> }> = (props) => {
             </ConfirmDialog>
             <Show when={dialog() === 'add'}>
                 <AddItemSheet checklist={props.checklist} onClose={() => setDialog(undefined)} />
+            </Show>
+            <Show when={dialog() === 'delete'}>
+                <DeleteChecklistDialog
+                    checklist={props.checklist}
+                    onClose={() => setDialog(undefined)}
+                    onDeleted={() => navigate({ name: 'archivedChecklists' }, true)}
+                />
             </Show>
         </>
     );

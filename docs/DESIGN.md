@@ -89,8 +89,7 @@ Reached from a checklist's overflow menu.
 
 ### Archive
 
-- Tabs for archived checklists and archived templates, newest first, each with **Restore**.
-- Archived templates can also be **deleted permanently**, with confirmation. Archived checklists can't be deleted.
+- Tabs for archived checklists and archived templates, newest first, each with **Restore** and **Delete forever** (with confirmation and Undo). An archived checklist's overflow menu also has Delete forever.
 - Archived templates aren't offered for import.
 
 ### Settings
@@ -111,7 +110,7 @@ The sheet stays open after each add for quick entry.
 
 ## Deleting
 
-Deleting is limited to library editing: template items, folders, and archived templates. Everything else is archived or skipped instead. The only exception is removing sections or groups in Edit structure.
+Deleting is limited to library editing (template items and folders) and the Archive (archived templates and checklists). Everything else is archived or skipped instead. The only exception is removing sections or groups in Edit structure.
 
 ## Interaction details
 
@@ -143,6 +142,7 @@ checklistItems/{id}  checklistId, sectionId, templateItemId | null, text, order,
 - Section `name` is the import-time fallback for when the template is deleted.
 - Removing a section deletes its `checklistItems` in the same batch.
 - Archiving sets `archived`; children are untouched.
+- Deleting an archived checklist deletes its `checklistItems` in the same batch.
 - Deleting an archived template deletes its `templateItems` in the same batch. Checklist items synced from it become local items.
 - Rules validate each document's shape; only allowlisted users can read or write (unchanged).
 - The prototype's `lists` and `items` collections are dropped.

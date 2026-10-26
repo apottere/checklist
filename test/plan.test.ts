@@ -4,6 +4,7 @@ import {
     addTemplateItem,
     checklistView,
     createChecklist,
+    deleteChecklist,
     deleteFolder,
     deleteTemplate,
     deleteTemplateItem,
@@ -169,6 +170,18 @@ describe('template sync', () => {
         expect(next.checklistItems.every((i) => i.templateItemId === null)).toBe(true);
         expect(checklistView(next, active)[0].sections[0].name).toBe('Toiletries');
     });
+});
+
+test('deleting a checklist removes only its items, and undo restores them', () => {
+    const { d, active, archived } = withChecklists();
+    const ops = deleteChecklist(d, archived);
+    const next = apply(d, ops);
+    expect(next.checklists.map((c) => c.id)).toEqual([active]);
+    expect(next.checklistItems.every((i) => i.checklistId === active)).toBe(true);
+    expect(texts(next, active)).toEqual(['Toothbrush', 'Toothpaste']);
+    const restored = apply(next, inverse(ops));
+    expect(restored.checklists).toHaveLength(2);
+    expect(texts(restored, archived)).toEqual(['Toothbrush', 'Toothpaste']);
 });
 
 describe('adding items from a checklist', () => {
