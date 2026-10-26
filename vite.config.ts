@@ -4,8 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 
 export default defineConfig({
-    // Served from https://<user>.github.io/checklist/
-    base: '/checklist/',
+    // Set by the deploy workflow to the repo's GitHub Pages path.
+    base: process.env.BASE_PATH ?? '/',
     resolve: {
         alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
     },

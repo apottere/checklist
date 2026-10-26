@@ -33,7 +33,11 @@ jobs:
             - run: |
                   config=$(pnpm exec firebase apps:sdkconfig WEB --project "${{ vars.FIREBASE_PROJECT_ID }}" --json | jq -c .result.sdkConfig)
                   echo "VITE_FIREBASE_CONFIG=$config" >> "$GITHUB_ENV"
+            - id: pages
+              uses: actions/configure-pages@v5
             - run: pnpm build
+              env:
+                  BASE_PATH: ${{ steps.pages.outputs.base_path }}/
             - uses: actions/upload-pages-artifact@v4
               with:
                   path: dist
