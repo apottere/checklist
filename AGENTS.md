@@ -1,5 +1,9 @@
 # Agent guidelines
 
+## Design
+
+[docs/DESIGN.md](docs/DESIGN.md) defines how the app should behave. Read it before feature work, and update it in the same change when behavior changes.
+
 ## Prose
 
 Applies to comments, READMEs, commit messages, PR descriptions, and any other prose.
