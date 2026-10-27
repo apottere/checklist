@@ -95,6 +95,11 @@ Reached from a checklist's overflow menu.
 ### Settings
 
 - The signed-in account and **Sign out**.
+- **Check for updates**, showing the running version (its commit), and **Reload**.
+
+### Updates
+
+The app is served from its offline cache, so a new version installs in the background. It's checked for on load, whenever the app comes back to the foreground, and every 15 minutes while it's open. Once one is ready, a toast offers **Reload**. It stays (returning after other toasts) until used, rather than reloading on its own, so an open sheet or pending Undo is never lost. Pull-to-refresh is off for the same reason.
 
 ## Adding items
 

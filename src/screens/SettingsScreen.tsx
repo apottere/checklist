@@ -2,6 +2,7 @@ import { Component } from 'solid-js';
 import { signOut, User } from 'firebase/auth';
 import { TopBar } from '@/components/TopBar.tsx';
 import { auth } from '@/lib/firebase.ts';
+import { checkForUpdates } from '@/lib/updates.ts';
 
 export const SettingsScreen: Component<{ user: User }> = (props) => {
     // The Google profile is refreshed on sign-in; the account's own display name may predate a rename.
@@ -24,6 +25,21 @@ export const SettingsScreen: Component<{ user: User }> = (props) => {
                         </div>
                     </div>
                     <ul class="list">
+                        <li class="row-button" onClick={() => void checkForUpdates()}>
+                            <span class="tile">
+                                <i>system_update</i>
+                            </span>
+                            <div class="max row-link">
+                                <span>Check for updates</span>
+                                <span class="muted">Version {__APP_VERSION__}</span>
+                            </div>
+                        </li>
+                        <li class="row-button" onClick={() => location.reload()}>
+                            <span class="tile">
+                                <i>refresh</i>
+                            </span>
+                            <span class="max">Reload</span>
+                        </li>
                         <li class="row-button" onClick={() => void signOut(auth)}>
                             <span class="tile">
                                 <i>logout</i>

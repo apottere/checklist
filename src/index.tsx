@@ -4,6 +4,7 @@ import '@/index.css';
 
 import { render } from 'solid-js/web';
 import { App } from '@/components/App.tsx';
+import '@/lib/updates.ts';
 
 // Beer CSS switches themes with a body class, normally set by its JS, which this app doesn't load.
 const dark = matchMedia('(prefers-color-scheme: dark)');

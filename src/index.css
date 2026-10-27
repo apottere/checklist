@@ -81,6 +81,8 @@ body.dark {
 }
 
 :root {
+    /* No pull-to-refresh (it would drop a pending Undo; Settings has Reload) or overscroll stretch. */
+    overscroll-behavior: none;
     --font: Roboto, system-ui, sans-serif;
     --radius-container: 1.5rem;
     --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
@@ -408,7 +410,11 @@ ul.tonal {
 
 /* Drag and drop */
 
+/* A 48px touch target around the 24px icon, without changing the row's layout. */
 .handle {
+    box-sizing: content-box;
+    padding: 0.75rem;
+    margin: -0.75rem;
     color: var(--on-surface-variant);
     cursor: grab;
     touch-action: none;
